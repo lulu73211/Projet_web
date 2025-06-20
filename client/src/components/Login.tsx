@@ -1,10 +1,11 @@
 // src/components/Login.tsx
 import React, { useState } from "react";
 import type { User } from "../types";
+import { useUserStore } from "@/store/userStore.ts";
+import { redirect } from "react-router";
 
 interface LoginProps {
   users: User[];
-  onLogin: (user: User) => void;
   children: (props: {
     email: string;
     password: string;
@@ -15,10 +16,11 @@ interface LoginProps {
   }) => React.ReactNode;
 }
 
-export default function Login({ users, onLogin, children }: LoginProps) {
+export default function Login({ users, children }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const setUser = useUserStore((state) => state.setUser);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,7 +29,8 @@ export default function Login({ users, onLogin, children }: LoginProps) {
     );
     if (found) {
       setError("");
-      onLogin(found);
+      setUser({ id: found.id, password : found.password, name : found.name, email : found.email, jwt : "yo" });
+      redirect("/")
     } else {
       setError("Identifiant ou mot de passe incorrect");
     }

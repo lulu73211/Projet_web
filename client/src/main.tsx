@@ -9,22 +9,27 @@ import Signup from './pages/Signup'
 import {
     createBrowserRouter,
     RouterProvider,
-} from "react-router-dom"
+} from "react-router"
+import LoginPage from "@/pages/LoginPage.tsx";
 
 const router = createBrowserRouter([
     {
-        path: "/*",  // le App gère le login OU la page messagerie
-        element: (
-            <PublicRoute>
-                <App />
-            </PublicRoute>
-        ),
+        path: "/",  // le App gère le login OU la page messagerie
+        element: <App/>,
     },
     {
         path: "/signup",
         element: (
             <PublicRoute>
                 <Signup/>
+            </PublicRoute>
+        ),
+    },
+    {
+        path: "/login",
+        element: (
+            <PublicRoute>
+                <LoginPage/>
             </PublicRoute>
         ),
     },

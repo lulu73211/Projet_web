@@ -1,39 +1,40 @@
 import React, { useState } from "react";
-import LoginPage from "./pages/LoginPage";
 import ConversationList from "./components/ConversationList";
 import ConversationDetail from "./components/ConversationDetail";
-import { usersMock } from "./mock/user";
 import { conversationsMock } from "./mock/conversation";
-import type { User, Conversation } from "./types";
+import type { Conversation, User } from "./types";
 import "./App.css";
+import { useUserStore } from "@/store/userStore.ts";
+import { usersMock } from "@/mock/user.ts";
 
 function App() {
   const [users] = useState<User[]>(usersMock);
   const [conversations] = useState<Conversation[]>(conversationsMock);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
 
-  const userConversations = currentUser
-    ? conversations.filter(conv => conv.users.includes(currentUser.id))
+  const userConversations = user
+    ? conversations.filter(conv => conv.users.includes(user.id))
     : [];
 
+  console.log(user);
   return (
     <div className="main-app-container">
-      {!currentUser ? (
-        <LoginPage users={users} onLogin={setCurrentUser} />
-      ) : (
         <div className="messenger-container">
           <div className="sidebar">
             <div className="profile">
-              <span className="profile-circle">{currentUser.name[0]}</span>
-              <span className="profile-name">{currentUser.name}</span>
-              <button className="logout-btn" onClick={() => { setCurrentUser(null); setSelectedConversation(null); }}>Déconnexion</button>
+              <span className="profile-circle">{user?.name[0]}</span>
+              <span className="profile-name">{user?.name}</span>
+              <button className="logout-btn" onClick={() => { setUser(null); setSelectedConversation(null); }}>Déconnexion</button>
             </div>
-            <ConversationList
-              user={currentUser}
-              conversations={userConversations}
-              onSelect={setSelectedConversation}
-            />
+            {
+              user ? <ConversationList
+                  user={user}
+                  conversations={userConversations}
+                  onSelect={setSelectedConversation}
+              /> : null
+            }
           </div>
           <div className="content">
             {selectedConversation ? (
@@ -48,7 +49,6 @@ function App() {
             )}
           </div>
         </div>
-      )}
     </div>
   );
 }

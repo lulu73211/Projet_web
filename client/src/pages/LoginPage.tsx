@@ -14,16 +14,15 @@ import { Label } from "@/components/ui/label"
 import { Link } from "react-router-dom"
 import type { User } from "../types"
 import Login from "../components/Login"
+import { useState } from "react";
+import { usersMock } from "@/mock/user.ts";
 
-interface LoginPageProps {
-  users: User[];
-  onLogin: (user: User) => void;
-}
+export default function LoginPage() {
+  const [users] = useState<User[]>(usersMock);
 
-export default function LoginPage({ users, onLogin }: LoginPageProps) {
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Login users={users} onLogin={onLogin}>
+      <Login users={users}>
         {({ email, password, error, onEmailChange, onPasswordChange, onSubmit }) => (
           <Card className="w-full max-w-sm">
             <CardHeader>

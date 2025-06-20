@@ -1,16 +1,10 @@
 // store/useCounterStore.ts
 import { create } from 'zustand'
-
-type User = {
-    id: number
-    name: string
-    email: string
-    jwt: string
-}
+import type {User} from '../types'
 
 type UserStore = {
     user: User | null
-    setUser: (user: User) => void
+    setUser: (user: User | null) => void
     updateUser: (partial: Partial<User>) => void
 }
 
