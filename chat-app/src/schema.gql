@@ -1,0 +1,69 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserModel {
+  id: Int!
+  name: String!
+  email: String!
+}
+
+type MessageModel {
+  id: Int!
+  content: String!
+  createdAt: DateTime!
+  author: UserModel!
+  conversation: ConversationModel!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type ConversationModel {
+  id: Int!
+  users: [UserModel!]!
+  messages: [MessageModel!]
+}
+
+type User {
+  id: Int!
+  email: String!
+  username: String!
+  fullName: String
+  isActive: Boolean!
+  roles: [String!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  messages: [MessageModel!]
+  conversations: [ConversationModel!]
+}
+
+type AuthResponse {
+  accessToken: String!
+  user: User!
+}
+
+type Query {
+  me: User!
+  getAllUsers: [User!]!
+}
+
+type Mutation {
+  register(registerInput: RegisterInput!): AuthResponse!
+  login(loginInput: LoginInput!): AuthResponse!
+  updateUserRole(userId: Int!, role: String!): User!
+}
+
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+  fullName: String
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
