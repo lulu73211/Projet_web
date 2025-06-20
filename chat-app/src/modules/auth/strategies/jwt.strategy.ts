@@ -4,6 +4,13 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from '../auth.service';
 import { jwtConstants } from '../constants/auth.constants';
 
+interface JwtPayload {
+  sub: number;
+  email: string;
+  username: string;
+  roles: string[];
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
@@ -14,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     const user = await this.authService.getUserById(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found');

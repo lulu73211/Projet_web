@@ -2,22 +2,27 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginInput, RegisterInput, AuthResponse } from './dto/auth.types';
-import { User } from './entities/user.entity';
-import { ROLES } from './constants/auth.constants';
+import { User, Role } from '@prisma/client';
 
-// TODO REWORK THIS PART WITH THE ACTUAL PRISMA MODEL
-const users: User[] = [];
+import { jwtConstants } from './constants/auth.constants';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private prisma: PrismaService,
+  ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
-    const user = users.find((u) => u.email === email);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       return user;
@@ -38,30 +43,32 @@ export class AuthService {
 
   async register(registerInput: RegisterInput): Promise<AuthResponse> {
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = users.find((u) => u.email === registerInput.email);
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: registerInput.email },
+          { username: registerInput.username },
+        ],
+      },
+    });
 
     if (existingUser) {
-      throw new UnauthorizedException('User already exists');
+      throw new ConflictException('User already exists');
     }
 
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(registerInput.password, 10);
 
     // Créer un nouvel utilisateur
-    const newUser: User = {
-      id: Date.now().toString(), // Pour un ID simple en mémoire
-      email: registerInput.email,
-      username: registerInput.username,
-      password: hashedPassword,
-      fullName: registerInput.fullName,
-      isActive: true,
-      roles: ['user'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    // Ajouter l'utilisateur à notre "base de données"
-    users.push(newUser);
+    const newUser = await this.prisma.user.create({
+      data: {
+        email: registerInput.email,
+        username: registerInput.username,
+        password: hashedPassword,
+        fullName: registerInput.fullName,
+        roles: [Role.USER],
+      },
+    });
 
     return this.generateAuthResponse(newUser);
   }
@@ -74,69 +81,64 @@ export class AuthService {
     };
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, {
+        secret: jwtConstants.secret,
+        expiresIn: jwtConstants.expiresIn,
+      }),
       user: {
         ...user,
-        password: 'undefined', // Ne pas renvoyer le mot de passe
       },
     };
   }
 
   // Cette méthode sera utilisée par la stratégie JWT
-  async getUserById(id: string): Promise<User | undefined> {
-    return users.find((user) => user.id === id);
+  async getUserById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
   }
 
-  // Méthode pour récupérer tous les utilisateurs (pour les admins)
+  // Méthodes pour la gestion des rôles
   async findAllUsers(): Promise<User[]> {
-    return users.map((user) => ({
-      ...user,
-      password: 'undefined', // Ne pas renvoyer le mot de passe
-    }));
+    return this.prisma.user.findMany();
   }
 
-  // Méthode pour mettre à jour le rôle d'un utilisateur
-  async updateUserRole(userId: string, role: string): Promise<User> {
-    const userIndex = users.findIndex((user) => user.id === userId);
+  async updateUserRole(userId: number, role: Role): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-    if (userIndex === -1) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    // Vérifier si le rôle est valide
-    const validRoles = Object.values(ROLES);
-    if (!validRoles.includes(role)) {
-      throw new UnauthorizedException(`Invalid role: ${role}`);
+    // Ajouter le rôle s'il n'existe pas déjà
+    if (!user.roles.includes(role)) {
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          roles: [...user.roles, role],
+        },
+      });
     }
 
-    // Mettre à jour le rôle
-    if (!users[userIndex].roles.includes(role)) {
-      users[userIndex].roles.push(role);
-    }
-
-    users[userIndex].updatedAt = new Date();
-
-    return {
-      ...users[userIndex],
-      password: 'undefined', // Ne pas renvoyer le mot de passe
-    };
+    return user;
   }
 
-  // Méthode pour supprimer un rôle d'un utilisateur
-  async removeUserRole(userId: string, role: string): Promise<User> {
-    const userIndex = users.findIndex((user) => user.id === userId);
+  async removeUserRole(userId: number, role: Role): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-    if (userIndex === -1) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    // Mettre à jour les rôles
-    users[userIndex].roles = users[userIndex].roles.filter((r) => r !== role);
-    users[userIndex].updatedAt = new Date();
-
-    return {
-      ...users[userIndex],
-      password: 'undefined', // Ne pas renvoyer le mot de passe
-    };
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        roles: user.roles.filter((r) => r !== role),
+      },
+    });
   }
 }

@@ -7,11 +7,12 @@ import { AuthResolver } from './auth.resolver';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { jwtConstants } from './constants/auth.constants';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Module({
   imports: [
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: jwtConstants.expiresIn },
@@ -22,11 +23,12 @@ import { RolesGuard } from '../../common/guards/roles.guard';
     AuthResolver,
     LocalStrategy,
     JwtStrategy,
+    PrismaService,
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -1,14 +1,13 @@
-import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Query, Int } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { User } from './entities/user.entity';
 import { LoginInput, RegisterInput, AuthResponse } from './dto/auth.types';
-
-import { ROLES } from './constants/auth.constants';
+import { RolesGuard } from './guards/roles.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { User } from '../user/entities/user.entity';
 
 @Resolver(() => User)
 export class AuthResolver {
@@ -38,7 +37,7 @@ export class AuthResolver {
 
   @Query(() => [User])
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLES.ADMIN)
+  @Roles(Role.ADMIN)
   async getAllUsers(): Promise<User[]> {
     // Cette route ne sera accessible que pour les utilisateurs
     // ayant le rôle ADMIN
@@ -47,10 +46,10 @@ export class AuthResolver {
 
   @Mutation(() => User)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLES.ADMIN, ROLES.MODERATOR)
+  @Roles(Role.ADMIN, Role.MODERATOR)
   async updateUserRole(
-    @Args('userId') userId: string,
-    @Args('role') role: string,
+    @Args('userId', { type: () => Int }) userId: number,
+    @Args('role', { type: () => String }) role: Role,
   ): Promise<User> {
     // Cette route ne sera accessible que pour les utilisateurs
     // ayant le rôle ADMIN ou MODERATOR

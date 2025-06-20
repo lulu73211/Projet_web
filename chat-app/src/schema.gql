@@ -2,21 +2,43 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type User {
-  id: ID!
+type UserModel {
+  id: Int!
+  name: String!
   email: String!
-  username: String!
-  fullName: String
-  isActive: Boolean!
-  roles: [String!]!
-  createdAt: DateTime
-  updatedAt: DateTime
+}
+
+type MessageModel {
+  id: Int!
+  content: String!
+  createdAt: DateTime!
+  author: UserModel!
+  conversation: ConversationModel!
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type ConversationModel {
+  id: Int!
+  users: [UserModel!]!
+  messages: [MessageModel!]
+}
+
+type User {
+  id: Int!
+  email: String!
+  username: String!
+  fullName: String
+  isActive: Boolean!
+  roles: [String!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  messages: [MessageModel!]
+  conversations: [ConversationModel!]
+}
 
 type AuthResponse {
   accessToken: String!
@@ -31,7 +53,7 @@ type Query {
 type Mutation {
   register(registerInput: RegisterInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
-  updateUserRole(userId: String!, role: String!): User!
+  updateUserRole(userId: Int!, role: String!): User!
 }
 
 input RegisterInput {

@@ -1,5 +1,6 @@
 import { Field, ObjectType, InputType } from '@nestjs/graphql';
-import { User } from '../entities/user.entity';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @ObjectType()
 export class AuthResponse {
@@ -13,25 +14,35 @@ export class AuthResponse {
 @InputType()
 export class LoginInput {
   @Field()
+  @IsEmail()
   email: string;
 
   @Field()
+  @IsString()
+  @MinLength(6)
   password: string;
 }
 
 @InputType()
 export class RegisterInput {
   @Field()
+  @IsEmail()
   email: string;
 
   @Field()
+  @IsString()
+  @MinLength(3)
   username: string;
 
   @Field()
+  @IsString()
+  @MinLength(6)
   password: string;
 
-  @Field({ nullable: true })
-  fullName?: string;
+  @Field(() => String, { nullable: true })
+  @IsString()
+  @IsOptional()
+  fullName: string | null;
 }
 
 @ObjectType()

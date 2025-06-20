@@ -1,22 +1,25 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    // Récupère les rôles requis des métadonnées
+    const roles = this.reflector.getAllAndOverride<Role[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    if (!requiredRoles) {
+    // Si aucun rôle n'est requis, autorise l'accès
+    if (!roles) {
       return true;
     }
 
+    // Convertit le contexte Express en contexte GraphQL
     const ctx = GqlExecutionContext.create(context);
     const user = ctx.getContext().req.user;
 
@@ -24,6 +27,6 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    return requiredRoles.some((role) => user.roles.includes(role));
+    return roles.some((role) => user.roles.includes(role));
   }
 }

@@ -7,26 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
 model User {
-  id             Int            @id @default(autoincrement())
-  name           String
-  email          String         @unique
-  messages       Message[]
-  conversations  Conversation[] @relation("UserConversations")
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  username      String         @unique
+  password      String
+  fullName      String?
+  isActive      Boolean        @default(true)
+  roles         Role[]         @default([USER])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  messages      Message[]
+  conversations Conversation[] @relation("UserConversations")
 }
 
 model Conversation {
-  id       Int     @id @default(autoincrement())
-  users    User[]  @relation("UserConversations")
+  id       Int       @id @default(autoincrement())
+  users    User[]    @relation("UserConversations")
   messages Message[]
 }
 
 model Message {
-  id              Int           @id @default(autoincrement())
-  content         String
-  createdAt       DateTime      @default(now())
-  author          User          @relation(fields: [authorId], references: [id])
-  authorId        Int
-  conversation    Conversation  @relation(fields: [conversationId], references: [id])
-  conversationId  Int
+  id             Int          @id @default(autoincrement())
+  content        String
+  createdAt      DateTime     @default(now())
+  author         User         @relation(fields: [authorId], references: [id])
+  authorId       Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId Int
 }
