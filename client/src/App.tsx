@@ -39,7 +39,8 @@ function App() {
           </div>
           <div className="content">
             {selectedConversation ? (
-              <ConversationDetail conversation={selectedConversation} />
+              <ConversationDetail conversation={selectedConversation} users={users} />
+
             ) : (
               <div className="empty-detail">
                 <h2>Sélectionnez une conversation</h2>
