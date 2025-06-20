@@ -8,6 +8,6 @@ interface PrivateRouteProps {
 
 export default function PrivateRoute({children}: PrivateRouteProps) {
     const user = useUserStore((state) => state.user)
-
+    console.log(user)
     return user ? children : <Navigate to="/login" replace />;
 }

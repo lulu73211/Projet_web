@@ -31,6 +31,7 @@ const router = createBrowserRouter([
         ),
     },
     {
+        path : "/",
         element: (
             <PrivateRoute>
                 <PrivateLayout />
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
         ),
         children: [
             {
-                path: "/",
+                path: "/chat/:chatId?",
                 element: <ChatApp />,
             },
         ],

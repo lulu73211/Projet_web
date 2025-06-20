@@ -1,19 +1,27 @@
-// store/useCounterStore.ts
-import { create } from 'zustand'
-import type {User} from '../types'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { User } from "../types";
 
 type UserStore = {
-    user: User | null
-    setUser: (user: User | null) => void
-    updateUser: (partial: Partial<User>) => void
-}
+    user: User | null;
+    setUser: (user: User | null) => void;
+    updateUser: (partial: Partial<User>) => void;
+};
 
-export const useUserStore = create<UserStore>((set) => ({
-    user: null, // 👈 pas de valeur par défaut
-    setUser: (user) => set({ user }),
-    updateUser: (partial) =>
-        set((state) => {
-            if (!state.user) return state // ou throw new Error('user not set')
-            return { user: { ...state.user, ...partial } }
+export const useUserStore = create<UserStore>()(
+    persist(
+        (set, get) => ({
+            user: null,
+            setUser: (user) => set({ user }),
+            updateUser: (partial) => {
+                const currentUser = get().user;
+                if (!currentUser) return;
+                set({ user: { ...currentUser, ...partial } });
+            },
         }),
-}))
+        {
+            name: "user-store",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
