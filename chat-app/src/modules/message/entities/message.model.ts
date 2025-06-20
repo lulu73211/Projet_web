@@ -3,7 +3,7 @@ import { ConversationModel } from 'src/modules/conversation/entities/conversatio
 import { UserModel } from 'src/modules/user/user.model';
 
 @ObjectType()
-export class MessageModel {
+export class MessageEntity {
   @Field(() => Int)
   id: number;
 

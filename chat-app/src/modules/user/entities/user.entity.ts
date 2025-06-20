@@ -1,7 +1,7 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Role } from '@prisma/client';
 import { ConversationModel } from 'src/modules/conversation/entities/conversation.model';
-import { MessageModel } from 'src/modules/message/entities/message.model';
+import { MessageEntity } from 'src/modules/message/entities/message.model';
 
 @ObjectType()
 export class User {
@@ -32,8 +32,8 @@ export class User {
   @Field()
   updatedAt: Date;
 
-  @Field(() => [MessageModel], { nullable: true })
-  messages?: MessageModel[];
+  @Field(() => [MessageEntity], { nullable: true })
+  messages?: MessageEntity[];
 
   @Field(() => [ConversationModel], { nullable: true })
   conversations?: ConversationModel[];
