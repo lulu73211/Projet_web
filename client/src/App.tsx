@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import Login from "./components/Login";
+//import UserList from "./components/UserList";
+import ConversationList from "./components/ConversationList";
+import ConversationDetail from "./components/ConversationDetail";
+import { usersMock } from "./mock/user";
+import { conversationsMock } from "./mock/conversation";
+import type { User, Conversation } from "./types";
+import "./App.css"; // Ajoute le fichier de style en-dessous
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [users] = useState<User[]>(usersMock);
+  const [conversations] = useState<Conversation[]>(conversationsMock);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+
+  // Filtrer les conversations où l'utilisateur est présent
+  const userConversations = currentUser
+    ? conversations.filter(conv => conv.users.includes(currentUser.id))
+    : [];
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="main-app-container">
+      {!currentUser ? (
+        <Login users={users} onLogin={setCurrentUser} />
+      ) : (
+        <div className="messenger-container">
+          <div className="sidebar">
+            <div className="profile">
+              <span className="profile-circle">{currentUser.name[0]}</span>
+              <span className="profile-name">{currentUser.name}</span>
+              <button className="logout-btn" onClick={() => { setCurrentUser(null); setSelectedConversation(null); }}>Déconnexion</button>
+            </div>
+            <ConversationList
+              user={currentUser}
+              conversations={userConversations}
+              onSelect={setSelectedConversation}
+            />
+          </div>
+          <div className="content">
+            {selectedConversation ? (
+              <ConversationDetail conversation={selectedConversation} users={users} />
+
+            ) : (
+              <div className="empty-detail">
+                <h2>Sélectionnez une conversation</h2>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
