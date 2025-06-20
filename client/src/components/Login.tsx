@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import type { User } from "../types";
 import { useUserStore } from "@/store/userStore.ts";
-import { redirect } from "react-router";
 
 interface LoginProps {
   users: User[];

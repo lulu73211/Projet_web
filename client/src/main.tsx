@@ -11,17 +11,16 @@ import {
     RouterProvider,
 } from "react-router"
 import LoginPage from "@/pages/LoginPage.tsx";
+import ChatApp from "@/pages/ChatPage.tsx";
+import PrivateLayout from "@/components/PrivateLayout.tsx";
+import PrivateRoute from "@/components/PrivateRoute.tsx";
 
 const router = createBrowserRouter([
-    {
-        path: "/",  // le App gère le login OU la page messagerie
-        element: <App/>,
-    },
     {
         path: "/signup",
         element: (
             <PublicRoute>
-                <Signup/>
+                <Signup />
             </PublicRoute>
         ),
     },
@@ -29,15 +28,27 @@ const router = createBrowserRouter([
         path: "/login",
         element: (
             <PublicRoute>
-                <LoginPage/>
+                <LoginPage />
             </PublicRoute>
         ),
+    },
+    {
+        element: (
+            <PrivateRoute>
+                <PrivateLayout />
+            </PrivateRoute>
+        ),
+        children: [
+            {
+                path: "/",
+                element: <ChatApp />,
+            },
+        ],
     },
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-      <Sidebar/>
       <RouterProvider router={router} />
   </StrictMode>,
 )
