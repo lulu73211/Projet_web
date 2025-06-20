@@ -1,23 +1,22 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import Login from './pages/Login.tsx'
-import Signup from './pages/Signup.tsx'
 import Sidebar from './components/Sidebar'
 import PublicRoute from './components/PublicRoute'
-// import PrivateRoute from './components/PrivateRoute'
+import App from './App'
+import Signup from './pages/Signup'
 
 import {
     createBrowserRouter,
     RouterProvider,
-} from "react-router";
+} from "react-router-dom"
 
 const router = createBrowserRouter([
     {
-        path: "/login",
+        path: "/*",  // le App gère le login OU la page messagerie
         element: (
             <PublicRoute>
-                <Login />
+                <App />
             </PublicRoute>
         ),
     },
@@ -29,7 +28,7 @@ const router = createBrowserRouter([
             </PublicRoute>
         ),
     },
-]);
+])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

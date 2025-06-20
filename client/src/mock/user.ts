@@ -1,5 +1,7 @@
+// mocks/user.ts
 import type { User } from "../types";
+
 export const usersMock: User[] = [
-  { id: 1, name: "t", password: "t" },
-  { id: 2, name: "Bob", password: "bob123" },
+  { id: 1, name: "Alice", email: "alice@example.com", password: "alice123" },
+  { id: 2, name: "Bob", email: "bob@example.com", password: "bob123" },
 ];
