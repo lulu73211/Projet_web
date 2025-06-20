@@ -30,7 +30,6 @@ export default function Login({ users, children }: LoginProps) {
     if (found) {
       setError("");
       setUser({ id: found.id, password : found.password, name : found.name, email : found.email, jwt : "yo" });
-      redirect("/")
     } else {
       setError("Identifiant ou mot de passe incorrect");
     }
