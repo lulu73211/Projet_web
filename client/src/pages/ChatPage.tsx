@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar } from "@/components/ui/avatar"
-import { X } from "lucide-react"
+import { Send, X } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
 
 // Types
@@ -119,7 +119,7 @@ export default function ChatApp() {
                         </CardHeader>
 
                         <CardContent className="flex-1 overflow-hidden p-0">
-                            <ScrollArea className="h-full p-4">
+                            <ScrollArea className="w-auto p-4" style={{height:600}}>
                                 <div className="flex flex-col gap-3">
                                     {messages.map((msg) => {
                                         const image = extractImageUrl(msg.text)
@@ -153,7 +153,7 @@ export default function ChatApp() {
                                 e.preventDefault()
                                 handleSend()
                             }}
-                            className="flex flex-col gap-2 border-t p-4"
+                            className="relative flex flex-col gap-2 border-t p-4"
                         >
                             <AnimatePresence>
                                 {imageUrl && showPreview && (
@@ -162,7 +162,7 @@ export default function ChatApp() {
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.85, y: -10 }}
                                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                                        className="relative w-32 h-32 rounded border self-start overflow-hidden"
+                                        className="absolute -top-36 left-4 z-50 w-32 h-32 rounded border overflow-hidden bg-white shadow-md"
                                     >
                                         <button
                                             type="button"
@@ -181,7 +181,7 @@ export default function ChatApp() {
                                 )}
                             </AnimatePresence>
 
-                            <div className="flex items-end gap-2">
+                            <div className="flex items-center gap-2">
                                 <Textarea
                                     rows={1}
                                     value={newMessage}
@@ -190,9 +190,12 @@ export default function ChatApp() {
                                         setShowPreview(true)
                                     }}
                                     placeholder="Écrire un message..."
-                                    className="resize-none"
+                                    className="resize-none flex-grow"
                                 />
-                                <Button type="submit">Envoyer</Button>
+                                <Button type="submit" className="gap-2 h-10">
+                                    <Send className="w-4 h-4" />
+                                    Envoyer
+                                </Button>
                             </div>
                         </form>
                     </Card>
