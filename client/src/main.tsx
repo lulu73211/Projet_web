@@ -4,6 +4,9 @@ import './index.css'
 import Login from './pages/Login.tsx'
 import Signup from './pages/Signup.tsx'
 import Sidebar from './components/Sidebar'
+import PublicRoute from './components/PublicRoute'
+// import PrivateRoute from './components/PrivateRoute'
+
 import {
     createBrowserRouter,
     RouterProvider,
@@ -12,11 +15,19 @@ import {
 const router = createBrowserRouter([
     {
         path: "/login",
-        element: <Login />,
+        element: (
+            <PublicRoute>
+                <Login />
+            </PublicRoute>
+        ),
     },
     {
         path: "/signup",
-        element: <Signup />,
+        element: (
+            <PublicRoute>
+                <Signup/>
+            </PublicRoute>
+        ),
     },
 ]);
 

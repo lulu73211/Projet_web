@@ -11,8 +11,20 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "react-router"
+import { useState } from "react";
+import { useUserStore } from '../store/userStore.ts'
 
 export default function Login() {
+    const setUser = useUserStore((state) => state.setUser)
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("")
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        setUser({id: 1, name: "", email: email, jwt: "Salut"})
+    }
+
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Card className="w-full max-w-sm">
@@ -28,7 +40,7 @@ export default function Login() {
                     </CardAction>
                 </CardHeader>
                 <CardContent>
-                    <form>
+                    <form id={"login"} onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
@@ -37,6 +49,8 @@ export default function Login() {
                                     type="email"
                                     placeholder="m@example.com"
                                     required
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -49,13 +63,13 @@ export default function Login() {
                                         Mot de passe oublié?
                                     </a>
                                 </div>
-                                <Input id="password" type="password" required />
+                                <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
                             </div>
                         </div>
                     </form>
                 </CardContent>
                 <CardFooter className="flex-col gap-2">
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full" form={"login"}>
                         Login
                     </Button>
                 </CardFooter>
