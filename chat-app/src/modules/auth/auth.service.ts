@@ -42,7 +42,6 @@ export class AuthService {
   }
 
   async register(registerInput: RegisterInput): Promise<AuthResponse> {
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -56,16 +55,15 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
-    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(registerInput.password, 10);
 
-    // Créer un nouvel utilisateur
     const newUser = await this.prisma.user.create({
       data: {
         email: registerInput.email,
         username: registerInput.username,
         password: hashedPassword,
-        fullName: registerInput.fullName,
+        firstName: registerInput.firstName,
+        lastName: registerInput.lastName,
         roles: [Role.USER],
       },
     });
@@ -91,14 +89,12 @@ export class AuthService {
     };
   }
 
-  // Cette méthode sera utilisée par la stratégie JWT
   async getUserById(id: number): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  // Méthodes pour la gestion des rôles
   async findAllUsers(): Promise<User[]> {
     return this.prisma.user.findMany();
   }
@@ -112,7 +108,6 @@ export class AuthService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    // Ajouter le rôle s'il n'existe pas déjà
     if (!user.roles.includes(role)) {
       return this.prisma.user.update({
         where: { id: userId },

@@ -1,6 +1,4 @@
 export const jwtConstants = {
-  secret: process.env.JWT_SECRET || 'your-secret-key-dev-only', // Toujours utiliser une variable d'environnement en production
+  secret: process.env.JWT_SECRET || 'your-secret-key-dev-only',
   expiresIn: '1d',
 };
-
-// Note: Les rôles sont maintenant définis dans le schema Prisma comme enum Role

@@ -19,7 +19,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Ne pas renvoyer le mot de passe dans la réponse
     const { password: _, ...result } = user;
     return result;
   }

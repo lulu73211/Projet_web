@@ -14,11 +14,13 @@ export class User {
   @Field()
   username: string;
 
-  // Ne pas exposer le mot de passe via GraphQL
   password: string;
 
   @Field(() => String, { nullable: true })
-  fullName: string | null;
+  firstName: string | null;
+
+  @Field(() => String, { nullable: true })
+  lastName: string | null;
 
   @Field()
   isActive: boolean;
