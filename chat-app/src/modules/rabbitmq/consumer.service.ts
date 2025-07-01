@@ -20,8 +20,6 @@ export class RabbitConsumer {
     try {
       const result = await this.messageService.handleIncoming(data);
       this.logger.log(`Message processed successfully: ${result.id}`);
-
-      await this.messageService.saveMessage(data);
       return result;
     } catch (error) {
       this.logger.error(
