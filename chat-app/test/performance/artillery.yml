@@ -1,0 +1,52 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+  variables:
+    email: 'mario@test.com'
+    password: 'test123'
+    authorId: 1
+    conversationId: 2
+  defaults:
+    headers:
+      Content-Type: application/json
+      # Header requis par Apollo Server
+      apollo-require-preflight: 'true'
+
+scenarios:
+  - name: 'Login and send multiple messages'
+    flow:
+      - post:
+          url: '/graphql'
+          json:
+            query: |
+              mutation Login($loginInput: LoginInput!) {
+                login(loginInput: $loginInput) {
+                  accessToken
+                }
+              }
+            variables:
+              loginInput:
+                email: '{{ email }}'
+                password: '{{ password }}'
+          capture:
+            json: '$.data.login.accessToken'
+            as: 'jwtToken'
+      # Envoi de 5 messages
+      - post:
+          url: '/graphql'
+          headers:
+            Authorization: 'Bearer {{ jwtToken }}'
+            apollo-require-preflight: 'true'
+          json:
+            query: |
+              mutation SendMessage($input: SendMessageInput!) {
+                sendMessage(input: $input)
+              }
+            variables:
+              input:
+                content: 'Hello from Artillery - Message {{ $loopCount }}'
+                authorId: { { authorId } }
+                conversationId: { { conversationId } }
+          repeat: 5
