@@ -3,13 +3,14 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  jwt: string | null;
+  jwt?: string | null;
 }
 
 
 export interface Message {
-  sender: number;
-  text: string;
+  id: number
+  sender: number 
+  text: string
 }
 
 export interface Conversation {
