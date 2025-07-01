@@ -6,35 +6,31 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
-  // Créer une application hybride (HTTP + Microservices)
   const app = await NestFactory.create(AppModule);
 
-  // Activer la validation globale
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Supprime les propriétés non-whitelistées
-      transform: true, // Transforme automatiquement les payloads
-      forbidNonWhitelisted: true, // Rejette les requêtes avec des propriétés non-whitelistées
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
     }),
   );
 
-  // Configuration du microservice RabbitMQ
   const microserviceOptions: MicroserviceOptions = {
     transport: Transport.RMQ,
     options: {
       urls: ['amqp://guest:guest@localhost:5672'],
       queue: 'message_queue',
       queueOptions: {
-        durable: true, // préférable pour persister
-        exclusive: false, // doit être false sauf si queue privée
-        autoDelete: false, // idem
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
       },
       noAck: true,
       prefetchCount: 1,
     },
   };
 
-  // Créer une application microservice distincte
   const microservice =
     await NestFactory.createMicroservice<MicroserviceOptions>(
       AppModule,

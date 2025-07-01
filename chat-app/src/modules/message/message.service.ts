@@ -42,7 +42,6 @@ export class MessageService {
     this.logger.log(`Handling incoming message: ${JSON.stringify(payload)}`);
     try {
       const message = await this.saveMessage(payload);
-      // Tu peux publier via GraphQL PubSub ici si besoin
       return message;
     } catch (error) {
       this.logger.error(

@@ -30,8 +30,6 @@ export class AuthResolver {
   @Query(() => User)
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() user: User): Promise<User> {
-    // Le user est automatiquement extrait du token JWT et injecté
-    // grâce au décorateur @CurrentUser()
     return user;
   }
 
@@ -39,8 +37,6 @@ export class AuthResolver {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async getAllUsers(): Promise<User[]> {
-    // Cette route ne sera accessible que pour les utilisateurs
-    // ayant le rôle ADMIN
     return this.authService.findAllUsers();
   }
 
@@ -51,8 +47,6 @@ export class AuthResolver {
     @Args('userId', { type: () => Int }) userId: number,
     @Args('role', { type: () => String }) role: Role,
   ): Promise<User> {
-    // Cette route ne sera accessible que pour les utilisateurs
-    // ayant le rôle ADMIN ou MODERATOR
     return this.authService.updateUserRole(userId, role);
   }
 }

@@ -9,7 +9,6 @@ export class GqlLocalAuthGuard extends AuthGuard('local') {
     const gqlReq = ctx.getContext().req;
     const { email, password } = ctx.getArgs().loginInput;
 
-    // Mute le request pour passport-local
     if (email && password) {
       gqlReq.body = { email, password };
     }

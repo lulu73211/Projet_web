@@ -31,7 +31,8 @@ type User {
   id: Int!
   email: String!
   username: String!
-  fullName: String
+  firstName: String
+  lastName: String
   isActive: Boolean!
   roles: [String!]!
   createdAt: DateTime!
@@ -48,6 +49,8 @@ type AuthResponse {
 type Query {
   me: User!
   getAllUsers: [User!]!
+  users: [User!]!
+  user(id: Int!): User
   getMessages(conversationId: Int!): [MessageEntity!]!
   conversations: [ConversationModel!]!
   conversation(id: Int!): ConversationModel
@@ -57,6 +60,7 @@ type Mutation {
   register(registerInput: RegisterInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   updateUserRole(userId: Int!, role: String!): User!
+  createUser(createUserInput: CreateUserInput!): User!
   sendMessage(input: SendMessageInput!): Boolean!
   createConversation(userIds: [Int!]!): ConversationModel!
 }
@@ -65,11 +69,19 @@ input RegisterInput {
   email: String!
   username: String!
   password: String!
-  fullName: String
+  firstName: String
+  lastName: String
 }
 
 input LoginInput {
   email: String!
+  password: String!
+}
+
+input CreateUserInput {
+  email: String!
+  name: String!
+  username: String!
   password: String!
 }
 
