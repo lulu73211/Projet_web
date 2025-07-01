@@ -1,9 +1,11 @@
 import { Resolver, Mutation, Args, Int, Query } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { RabbitProducer } from '../rabbitmq/producer.service';
 import { MessageService } from './message.service';
 import { MessageEntity } from './entities/message.model';
 import { SendMessageInput } from './dto/message.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @Resolver(() => MessageEntity)
 export class MessageResolver {
@@ -15,6 +17,7 @@ export class MessageResolver {
   ) {}
 
   @Query(() => [MessageEntity])
+  @UseGuards(JwtAuthGuard)
   async getMessages(
     @Args('conversationId', { type: () => Int }) conversationId: number,
   ) {
@@ -23,10 +26,10 @@ export class MessageResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseGuards(JwtAuthGuard)
   async sendMessage(@Args('input') input: SendMessageInput) {
     this.logger.log(`Sending message: ${JSON.stringify(input)}`);
     try {
-      // Also publish to RabbitMQ for any background processing
       await this.rabbit.publish('message_send', input);
 
       return true;

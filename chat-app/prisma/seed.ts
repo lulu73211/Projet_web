@@ -5,25 +5,31 @@ async function main() {
   await prisma.user.createMany({
     data: [
       {
-        fullName: 'Alice',
+        firstName: 'Alice',
+        lastName: 'Gagoi',
         email: 'alice@email.com',
-        password: 'test',
+        password:
+          '$2b$10$C4SeSzM1i9lWDRbOsB1Q/uEQWSMczylyn2M3.KXXl5OjnsMEC63Sy',
         username: 'Alice User',
       },
       {
-        fullName: 'Bob',
+        firstName: 'Bob',
+        lastName: 'Bricolo',
         email: 'bob@email.com',
-        password: 'test',
+        password:
+          '$2b$10$C4SeSzM1i9lWDRbOsB1Q/uEQWSMczylyn2M3.KXXl5OjnsMEC63Sy',
         username: 'BOB User',
       },
       {
-        fullName: 'Charlie',
+        firstName: 'Charlie',
+        lastName: 'Proute',
         email: 'charlie@email.com',
-        password: 'test',
+        password:
+          '$2b$10$C4SeSzM1i9lWDRbOsB1Q/uEQWSMczylyn2M3.KXXl5OjnsMEC63Sy',
         username: 'CHarlie User',
       },
     ],
-    skipDuplicates: true, // Évite les erreurs si tu relances le seed
+    skipDuplicates: true,
   });
 }
 

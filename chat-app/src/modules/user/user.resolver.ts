@@ -1,20 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { UserService } from './user.service';
+import { User } from './entities/user.entity';
+import { CreateUserInput } from './dto/create-user.types';
 
-@Injectable()
+@Resolver(() => User)
 export class UserResolver {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly userService: UserService) {}
 
-  async users(): Promise<User[]> {
-    return this.prisma.user.findMany();
+  @Query(() => [User], { name: 'users' })
+  findAll() {
+    return this.userService.users();
   }
 
-  async user(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
+  @Query(() => User, { name: 'user', nullable: true })
+  findOne(@Args('id', { type: () => Int }) id: number) {
+    return this.userService.user(id);
   }
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
-    return this.prisma.user.create({ data });
+  @Mutation(() => User)
+  createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
+    return this.userService.createUser(createUserInput);
   }
 }

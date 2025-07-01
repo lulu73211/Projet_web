@@ -3,15 +3,15 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 
-// Mets l'URL de ton backend GraphQL ici (http en général pour queries/mutations)
 const httpLink = new HttpLink({
-  uri: "http://localhost:3001/graphql", // adapte le port si besoin !
+  uri: "http://localhost:3001/graphql",
 });
 
-// Mets l'URL WebSocket (ws) ici pour les subscriptions
-const wsLink = new GraphQLWsLink(createClient({
-  url: "ws://localhost:3001/graphql",
-}));
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:3001/graphql",
+  }),
+);
 
 const splitLink = split(
   ({ query }) => {

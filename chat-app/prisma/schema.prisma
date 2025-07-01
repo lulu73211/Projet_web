@@ -18,7 +18,8 @@ model User {
   email         String         @unique
   username      String         @unique
   password      String
-  fullName      String?
+  firstName     String?
+  lastName      String?
   isActive      Boolean        @default(true)
   roles         Role[]         @default([USER])
   createdAt     DateTime       @default(now())

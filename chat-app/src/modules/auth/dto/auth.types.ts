@@ -42,7 +42,12 @@ export class RegisterInput {
   @Field(() => String, { nullable: true })
   @IsString()
   @IsOptional()
-  fullName: string | null;
+  firstName: string | null;
+
+  @Field(() => String, { nullable: true })
+  @IsString()
+  @IsOptional()
+  lastName: string | null;
 }
 
 @ObjectType()
