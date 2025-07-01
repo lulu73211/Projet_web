@@ -1,17 +1,29 @@
 import { Home, MessageSquare, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Link, useNavigate } from "react-router";
+import { useUserStore } from "@/store/userStore";
 
 export default function Sidebar() {
+    const navigate = useNavigate();
+    const clearUser = useUserStore(state => state.clearUser);
+
+    const handleLogout = () => {
+        clearUser(); // reset le store
+        navigate("/"); // redirige
+    };
+
     return (
         <TooltipProvider>
-            <div className="fixed left-0 top-0 h-screen w-16 bg-muted flex flex-col justify-between py-6">
+            <div className="h-screen w-16 bg-muted flex flex-col justify-between py-6">
                 {/* Top icons */}
                 <div className="flex flex-col items-center gap-4">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Home className="w-5 h-5" />
+                            <Button variant="ghost" size="icon" asChild>
+                                <Link to="/">
+                                    <Home className="w-5 h-5" />
+                                </Link>
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="right">
@@ -21,8 +33,10 @@ export default function Sidebar() {
 
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MessageSquare className="w-5 h-5" />
+                            <Button variant="ghost" size="icon" asChild>
+                                <Link to="/chat">
+                                    <MessageSquare className="w-5 h-5" />
+                                </Link>
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="right">
@@ -35,7 +49,7 @@ export default function Sidebar() {
                 <div className="flex flex-col items-center gap-4">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={handleLogout}>
                                 <LogOut className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>

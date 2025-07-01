@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import ConversationList from "./components/ConversationList";
+import ConversationDetail from "./components/ConversationDetail";
+import { conversationsMock } from "./mock/conversation";
+import type { Conversation, User } from "./types";
+import "./App.css";
+import { useUserStore } from "@/store/userStore.ts";
+import { usersMock } from "@/mock/user.ts";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [users] = useState<User[]>(usersMock);
+  const [conversations] = useState<Conversation[]>(conversationsMock);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
 
+  const userConversations = user
+    ? conversations.filter(conv => conv.users.includes(user.id))
+    : [];
+
+  console.log(user);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="main-app-container">
+        <div className="messenger-container">
+          <div className="sidebar">
+            <div className="profile">
+              <span className="profile-circle">{user?.name[0]}</span>
+              <span className="profile-name">{user?.name}</span>
+              <button className="logout-btn" onClick={() => { setUser(null); setSelectedConversation(null); }}>Déconnexion</button>
+            </div>
+            {
+              user ? <ConversationList
+                  user={user}
+                  conversations={userConversations}
+                  onSelect={setSelectedConversation}
+              /> : null
+            }
+          </div>
+          <div className="content">
+            {selectedConversation ? (
+              <ConversationDetail
+                conversation={selectedConversation}
+                users={users}
+              />
+            ) : (
+              <div className="empty-detail">
+                <h2>Sélectionnez une conversation</h2>
+              </div>
+            )}
+          </div>
+        </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
