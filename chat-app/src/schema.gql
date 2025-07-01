@@ -46,6 +46,12 @@ type AuthResponse {
   user: User!
 }
 
+type MessagePayload {
+  content: String!
+  authorId: Int!
+  conversationId: Int!
+}
+
 type Query {
   me: User!
   getAllUsers: [User!]!
@@ -89,4 +95,8 @@ input SendMessageInput {
   content: String!
   authorId: Int!
   conversationId: Int!
+}
+
+type Subscription {
+  messageSend: MessagePayload!
 }

@@ -17,6 +17,9 @@ import { ConversationModule } from './modules/conversation/conversation.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      subscriptions: {
+        'graphql-ws': true,
+      },
     }),
     UserModule,
     PrismaModule,
