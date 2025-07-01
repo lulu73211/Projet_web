@@ -15,7 +15,7 @@ export default function ConversationList({
 
   return (
     <div>
-      <h2>Conversations de {user.name}</h2>
+      <h2>Conversations de {user.username}</h2>
       <ul>
         {userConversations.map(conv => (
           <li key={conv.id} onClick={() => onSelect(conv)} style={{ cursor: "pointer" }}>

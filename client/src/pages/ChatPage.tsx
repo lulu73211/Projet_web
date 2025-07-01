@@ -8,18 +8,9 @@ import { Avatar } from "@/components/ui/avatar"
 import { Send, X } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
 
-// Types
-type Message = {
-    id: number
-    text: string
-    sender: "me" | "other"
-}
-
-const conversations = [
-    { id: 1, name: "Alice" },
-    { id: 2, name: "Bob" },
-    { id: 3, name: "Charlie" },
-]
+import { conversationsMock } from "../mock/conversation"
+import { usersMock } from "../mock/user"
+import type { Conversation, Message, User } from "@/types"
 
 export default function ChatApp() {
     const { chatId } = useParams<{ chatId?: string }>()
@@ -27,18 +18,10 @@ export default function ChatApp() {
     const [newMessage, setNewMessage] = useState("")
     const [showPreview, setShowPreview] = useState(true)
 
-    // Exemple : chaque chat a sa propre liste de messages (faux backend ici)
-    const [messageStore, setMessageStore] = useState<Record<string, Message[]>>({
-        "1": [
-            { id: 1, text: "Salut Alice", sender: "other" },
-            { id: 2, text: "Comment ça va ?", sender: "me" },
-        ],
-        "2": [
-            { id: 1, text: "Yo Bob !", sender: "other" },
-            { id: 2, text: "Ça roule ?", sender: "me" },
-        ],
-        "3": [{ id: 1, text: "Hey Charlie 👋", sender: "me" }],
-    })
+    const [conversationStore, setConversationStore] = useState<Conversation[]>(conversationsMock)
+
+    // Id fixe de l'utilisateur connecté
+    const myId = 1
 
     const extractImageUrl = (text: string): string | null => {
         const regex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/i
@@ -47,28 +30,31 @@ export default function ChatApp() {
     }
 
     const imageUrl = extractImageUrl(newMessage)
-    const messages = chatId ? messageStore[chatId] ?? [] : []
+    const currentConversation = conversationStore.find(c => String(c.id) === chatId)
 
     const handleSend = () => {
         if (!chatId || newMessage.trim() === "") return
 
         const image = extractImageUrl(newMessage)
         const text = image ? newMessage.replace(image, "").trim() : newMessage.trim()
-        const base = messages.length + 1
 
         const newMsgs: Message[] = []
+        const baseId = currentConversation?.messages.length ? currentConversation.messages.length + 1 : 1
 
         if (image) {
-            newMsgs.push({ id: base, text: image, sender: "me" })
+            newMsgs.push({ id: baseId, content: image, createdAt: new Date().toISOString(), authorId: myId, conversationId: Number(chatId) })
         }
         if (text) {
-            newMsgs.push({ id: base + newMsgs.length, text, sender: "me" })
+            newMsgs.push({ id: baseId + newMsgs.length, content: text, createdAt: new Date().toISOString(), authorId: myId, conversationId: Number(chatId) })
         }
 
-        setMessageStore((prev) => ({
-            ...prev,
-            [chatId]: [...(prev[chatId] || []), ...newMsgs],
-        }))
+        setConversationStore(prev =>
+            prev.map(conv =>
+                conv.id === Number(chatId)
+                    ? { ...conv, messages: [...conv.messages, ...newMsgs] }
+                    : conv
+            )
+        )
 
         setNewMessage("")
         setShowPreview(true)
@@ -86,6 +72,15 @@ export default function ChatApp() {
         navigate(`/chat/${id}`)
     }
 
+    const getUserName = (authorId: number) => {
+        return usersMock.find(u => u.id === authorId)?.username || `User #${authorId}`
+    }
+
+    const getOtherParticipantName = (conv: Conversation) => {
+        const otherId = conv.users.find(id => id !== myId)
+        return usersMock.find(u => u.id === otherId)?.username || `User #${otherId}`
+    }
+
     return (
         <div className="flex h-screen w-full">
             {/* Sidebar */}
@@ -93,7 +88,7 @@ export default function ChatApp() {
                 <h2 className="text-lg font-semibold mb-4">Conversations</h2>
                 <ScrollArea className="flex-1">
                     <div className="flex flex-col gap-2">
-                        {conversations.map((conv) => (
+                        {conversationStore.map((conv) => (
                             <Button
                                 key={conv.id}
                                 variant={chatId === String(conv.id) ? "secondary" : "ghost"}
@@ -101,7 +96,7 @@ export default function ChatApp() {
                                 className="justify-start"
                             >
                                 <Avatar className="mr-2 h-6 w-6" />
-                                {conv.name}
+                                {getOtherParticipantName(conv)}
                             </Button>
                         ))}
                     </div>
@@ -110,24 +105,24 @@ export default function ChatApp() {
 
             {/* Chat window */}
             <main className="flex flex-col flex-1">
-                {chatId ? (
+                {currentConversation ? (
                     <Card className="flex flex-col flex-1 rounded-none">
                         <CardHeader className="border-b">
                             <h3 className="text-lg font-semibold text-center">
-                                {conversations.find((c) => String(c.id) === chatId)?.name}
+                                {getOtherParticipantName(currentConversation)}
                             </h3>
                         </CardHeader>
 
                         <CardContent className="flex-1 overflow-hidden p-0">
-                            <ScrollArea className="w-auto p-4" style={{height:600}}>
+                            <ScrollArea className="w-auto p-4" style={{ height: 600 }}>
                                 <div className="flex flex-col gap-3">
-                                    {messages.map((msg) => {
-                                        const image = extractImageUrl(msg.text)
+                                    {currentConversation.messages.map((msg) => {
+                                        const image = extractImageUrl(msg.content)
                                         return (
                                             <div
                                                 key={msg.id}
                                                 className={`max-w-sm rounded-lg px-4 py-2 text-sm ${
-                                                    msg.sender === "me"
+                                                    msg.authorId === myId
                                                         ? "bg-primary text-white self-end"
                                                         : "bg-muted text-black self-start"
                                                 }`}
@@ -139,7 +134,9 @@ export default function ChatApp() {
                                                         className="max-w-full rounded-md"
                                                     />
                                                 ) : (
-                                                    msg.text
+                                                    <>
+                                                        <b>{getUserName(msg.authorId)}</b>: {msg.content}
+                                                    </>
                                                 )}
                                             </div>
                                         )

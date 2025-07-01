@@ -1,4 +1,3 @@
-// src/components/Login.tsx
 import React, { useState } from "react";
 import type { User } from "../types";
 import { useUserStore } from "@/store/userStore.ts";
@@ -28,7 +27,18 @@ export default function Login({ users, children }: LoginProps) {
     );
     if (found) {
       setError("");
-      setUser({ id: found.id, password : found.password, name : found.name, email : found.email, jwt : "yo" });
+      setUser({
+        id: found.id,
+        email: found.email,
+        password: found.password,
+        username: found.username,
+        fullName: found.fullName,
+        isActive: found.isActive,
+        roles: found.roles,
+        createdAt: found.createdAt,
+        updatedAt: found.updatedAt,
+        jwt: "yo"
+      });
     } else {
       setError("Identifiant ou mot de passe incorrect");
     }

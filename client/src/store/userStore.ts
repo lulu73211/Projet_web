@@ -6,6 +6,7 @@ type UserStore = {
     user: User | null;
     setUser: (user: User | null) => void;
     updateUser: (partial: Partial<User>) => void;
+    clearUser: () => void;
 };
 
 export const useUserStore = create<UserStore>()(
@@ -18,6 +19,7 @@ export const useUserStore = create<UserStore>()(
                 if (!currentUser) return;
                 set({ user: { ...currentUser, ...partial } });
             },
+            clearUser: () => set({ user: null }),
         }),
         {
             name: "user-store",

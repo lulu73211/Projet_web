@@ -6,10 +6,10 @@ interface ConversationDetailProps {
 }
 
 export default function ConversationDetail({ conversation, users }: ConversationDetailProps) {
-  // Petite fonction pour trouver le nom selon l'id
+  // Petite fonction pour trouver le username selon l'id
   const getUserName = (id: number) => {
     const user = users.find(u => u.id === id);
-    return user ? user.name : `Utilisateur #${id}`;
+    return user ? user.username : `Utilisateur #${id}`;
   };
 
   return (
@@ -18,7 +18,7 @@ export default function ConversationDetail({ conversation, users }: Conversation
       <ul>
         {conversation.messages.map((m, idx) => (
           <li key={idx}>
-            <b>{getUserName(m.sender)}</b> : {m.text}
+            <b>{getUserName(m.authorId)}</b> : {m.content}
           </li>
         ))}
       </ul>

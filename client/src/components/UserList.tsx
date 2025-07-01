@@ -12,7 +12,7 @@ export default function UserList({ users, onSelect }: UserListProps) {
       <ul>
         {users.map(u => (
           <li key={u.id} onClick={() => onSelect(u)} style={{ cursor: "pointer" }}>
-            {u.name}
+            {u.username}
           </li>
         ))}
       </ul>
