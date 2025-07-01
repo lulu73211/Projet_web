@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { User } from "../types";
-import { useUserStore } from "@/store/userStore.ts";
+import { useUserStore } from "@/store/userStore";
 
 interface LoginProps {
   users: User[];
@@ -22,23 +22,10 @@ export default function Login({ users, children }: LoginProps) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const found = users.find(
-      user => user.email === email && user.password === password
-    );
+    const found = users.find(user => user.email === email && user.password === password);
     if (found) {
       setError("");
-      setUser({
-        id: found.id,
-        email: found.email,
-        password: found.password,
-        username: found.username,
-        fullName: found.fullName,
-        isActive: found.isActive,
-        roles: found.roles,
-        createdAt: found.createdAt,
-        updatedAt: found.updatedAt,
-        jwt: "yo"
-      });
+      setUser(found);
     } else {
       setError("Identifiant ou mot de passe incorrect");
     }

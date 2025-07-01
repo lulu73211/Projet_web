@@ -5,24 +5,29 @@ export interface User {
   email: string;
   username: string;
   password: string;
-  fullName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
   isActive: boolean;
   roles: Role[];
-  createdAt: string; // ou Date si tu gères en Date JS
-  updatedAt: string; // idem
-  jwt?: string | null; // si tu continues de gérer le token côté front
+  createdAt: string; // ou Date si tu restes côté Node
+  updatedAt: string;
+  conversations?: Conversation[]; // optionnel si non inclus
+  messages?: Message[];
+  jwt?: string | null; // pour ton front après login
+}
+
+export interface Conversation {
+  id: number;
+  users: User[]; // relation directe
+  messages: Message[];
 }
 
 export interface Message {
   id: number;
   content: string;
-  createdAt: string; // ou Date
+  createdAt: string;
   authorId: number;
   conversationId: number;
-}
-
-export interface Conversation {
-  id: number;
-  users: number[]; // array d'id des users
-  messages: Message[];
+  author?: User;           // optionnel si tu inclues l'auteur
+  conversation?: Conversation;
 }

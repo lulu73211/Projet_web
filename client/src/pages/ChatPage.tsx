@@ -9,7 +9,6 @@ import { Send, X } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
 
 import { conversationsMock } from "../mock/conversation"
-import { usersMock } from "../mock/user"
 import type { Conversation, Message, User } from "@/types"
 
 export default function ChatApp() {
@@ -20,7 +19,7 @@ export default function ChatApp() {
 
     const [conversationStore, setConversationStore] = useState<Conversation[]>(conversationsMock)
 
-    // Id fixe de l'utilisateur connecté
+    // Id fixe de l'utilisateur connecté (à remplacer par useUserStore plus tard)
     const myId = 1
 
     const extractImageUrl = (text: string): string | null => {
@@ -42,10 +41,22 @@ export default function ChatApp() {
         const baseId = currentConversation?.messages.length ? currentConversation.messages.length + 1 : 1
 
         if (image) {
-            newMsgs.push({ id: baseId, content: image, createdAt: new Date().toISOString(), authorId: myId, conversationId: Number(chatId) })
+            newMsgs.push({
+                id: baseId,
+                content: image,
+                createdAt: new Date().toISOString(),
+                authorId: myId,
+                conversationId: Number(chatId)
+            })
         }
         if (text) {
-            newMsgs.push({ id: baseId + newMsgs.length, content: text, createdAt: new Date().toISOString(), authorId: myId, conversationId: Number(chatId) })
+            newMsgs.push({
+                id: baseId + newMsgs.length,
+                content: text,
+                createdAt: new Date().toISOString(),
+                authorId: myId,
+                conversationId: Number(chatId)
+            })
         }
 
         setConversationStore(prev =>
@@ -72,13 +83,13 @@ export default function ChatApp() {
         navigate(`/chat/${id}`)
     }
 
-    const getUserName = (authorId: number) => {
-        return usersMock.find(u => u.id === authorId)?.username || `User #${authorId}`
+    const getUserName = (authorId: number, conv: Conversation) => {
+        return conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
     }
 
     const getOtherParticipantName = (conv: Conversation) => {
-        const otherId = conv.users.find(id => id !== myId)
-        return usersMock.find(u => u.id === otherId)?.username || `User #${otherId}`
+        const otherId = conv.users.find(u => u.id !== myId)
+        return otherId?.username || `Participant`
     }
 
     return (
@@ -135,7 +146,7 @@ export default function ChatApp() {
                                                     />
                                                 ) : (
                                                     <>
-                                                        <b>{getUserName(msg.authorId)}</b>: {msg.content}
+                                                        <b>{getUserName(msg.authorId, currentConversation)}</b>: {msg.content}
                                                     </>
                                                 )}
                                             </div>

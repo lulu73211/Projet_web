@@ -2,23 +2,22 @@ import type { Conversation, User } from "../types";
 
 interface ConversationDetailProps {
   conversation: Conversation;
-  users: User[];
 }
 
-export default function ConversationDetail({ conversation, users }: ConversationDetailProps) {
-  // Petite fonction pour trouver le username selon l'id
-  const getUserName = (id: number) => {
-    const user = users.find(u => u.id === id);
-    return user ? user.username : `Utilisateur #${id}`;
+export default function ConversationDetail({ conversation }: ConversationDetailProps) {
+  const getUserName = (authorId: number) => {
+    return conversation.users.find(u => u.id === authorId)?.username || `User #${authorId}`;
   };
 
   return (
     <div>
-      <h2>Détails de la conversation #{conversation.id}</h2>
+      <h2>Conversation avec {
+        conversation.users.filter(u => u.id !== 1).map(u => u.username).join(", ")
+      }</h2>
       <ul>
-        {conversation.messages.map((m, idx) => (
-          <li key={idx}>
-            <b>{getUserName(m.authorId)}</b> : {m.content}
+        {conversation.messages.map(msg => (
+          <li key={msg.id}>
+            <b>{getUserName(msg.authorId)}</b>: {msg.content}
           </li>
         ))}
       </ul>
