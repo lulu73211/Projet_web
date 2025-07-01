@@ -17,6 +17,7 @@ config:
 scenarios:
   - name: 'Login and send multiple messages'
     flow:
+      # 1. Login to get the authentication token
       - post:
           url: '/graphql'
           json:
@@ -31,22 +32,23 @@ scenarios:
                 email: '{{ email }}'
                 password: '{{ password }}'
           capture:
-            json: '$.data.login.accessToken'
-            as: 'jwtToken'
-      # Envoi de 5 messages
-      - post:
-          url: '/graphql'
-          headers:
-            Authorization: 'Bearer {{ jwtToken }}'
-            apollo-require-preflight: 'true'
-          json:
-            query: |
-              mutation SendMessage($input: SendMessageInput!) {
-                sendMessage(input: $input)
-              }
-            variables:
-              input:
-                content: 'Hello from Artillery - Message {{ $loopCount }}'
-                authorId: { { authorId } }
-                conversationId: { { conversationId } }
-          repeat: 5
+            - json: '$.data.login.accessToken'
+              as: 'jwtToken'
+
+      # 2. Loop to send 5 messages
+      - loop:
+          - post:
+              url: '/graphql'
+              headers:
+                Authorization: 'Bearer {{ jwtToken }}'
+              json:
+                query: |
+                  mutation SendMessage($input: SendMessageInput!) {
+                    sendMessage(input: $input)
+                  }
+                variables:
+                  input:
+                    content: 'Hello from Artillery - Message {{ $loopCount }}'
+                    authorId: '{{ authorId }}'
+                    conversationId: '{{ conversationId }}'
+        count: 5
