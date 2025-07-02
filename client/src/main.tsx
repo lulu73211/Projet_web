@@ -1,13 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import PublicRoute from './components/PublicRoute'
-import Signup from './pages/Signup'
+
+import { ApolloProvider } from "@apollo/client";
+import { client } from "./apolloClient"; // assure toi qu’il existe et configure ton link+auth
 
 import {
     createBrowserRouter,
     RouterProvider,
 } from "react-router"
+
+import PublicRoute from './components/PublicRoute'
+import Signup from './pages/Signup'
 import LoginPage from "@/pages/LoginPage.tsx";
 import ChatApp from "@/pages/ChatPage.tsx";
 import PrivateLayout from "@/components/PrivateLayout.tsx";
@@ -47,7 +51,9 @@ const router = createBrowserRouter([
 ])
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-      <RouterProvider router={router} />
-  </StrictMode>,
+    <StrictMode>
+        <ApolloProvider client={client}>
+            <RouterProvider router={router} />
+        </ApolloProvider>
+    </StrictMode>
 )

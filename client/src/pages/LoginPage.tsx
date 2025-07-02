@@ -18,11 +18,9 @@ import { useState } from "react";
 import { usersMock } from "@/mock/user.ts";
 
 export default function LoginPage() {
-  const [users] = useState<User[]>(usersMock);
-
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Login users={users}>
+      <Login>
         {({ email, password, error, onEmailChange, onPasswordChange, onSubmit }) => (
           <Card className="w-full max-w-sm">
             <CardHeader>
@@ -83,3 +81,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

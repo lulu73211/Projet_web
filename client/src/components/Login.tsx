@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // <---
 import type { User } from "../types";
 import { useUserStore } from "@/store/userStore";
+import { useLoginMutation } from "@/generated/graphql";
+import type { Role } from "@/types";
 
 interface LoginProps {
-  users: User[];
   children: (props: {
     email: string;
     password: string;
@@ -14,20 +16,40 @@ interface LoginProps {
   }) => React.ReactNode;
 }
 
-export default function Login({ users, children }: LoginProps) {
+export default function Login({ children }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const setUser = useUserStore((state) => state.setUser);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const navigate = useNavigate(); // <---
+  const [loginMutation] = useLoginMutation();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const found = users.find(user => user.email === email && user.password === password);
-    if (found) {
-      setError("");
-      setUser(found);
-    } else {
-      setError("Identifiant ou mot de passe incorrect");
+    try {
+      const { data } = await loginMutation({
+        variables: { loginInput: { email, password } }
+      });
+
+      if (data?.login.accessToken && data.login.user) {
+        console.log("Login ok, token stocké :", data.login.accessToken);
+        localStorage.setItem("token", data.login.accessToken);
+        setUser({
+  ...data.login.user,
+  roles: data.login.user.roles as Role[],
+  password: "",
+  isActive: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+        navigate("/chat"); // <--- redirection automatique
+      } else {
+        setError("Identifiants incorrects");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors de la connexion");
     }
   };
 
@@ -35,8 +57,8 @@ export default function Login({ users, children }: LoginProps) {
     email,
     password,
     error,
-    onEmailChange: e => setEmail(e.target.value),
-    onPasswordChange: e => setPassword(e.target.value),
+    onEmailChange: (e) => setEmail(e.target.value),
+    onPasswordChange: (e) => setPassword(e.target.value),
     onSubmit: handleSubmit,
   });
 }
