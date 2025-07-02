@@ -1,5 +1,5 @@
-schema: "../chat-app/src/schema.gql"
-documents: "src/**/*.{ts,tsx}"
+schema: "http://localhost:3000/graphql"
+documents: "src/**/*.{ts,tsx,graphql,gql}"
 generates:
   src/generated/graphql.tsx:
     plugins:
