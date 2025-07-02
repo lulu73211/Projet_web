@@ -1,4 +1,3 @@
-// src/pages/LoginPage.tsx
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,10 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "react-router-dom"
-import type { User } from "../types"
 import Login from "../components/Login"
-import { useState } from "react";
-import { usersMock } from "@/mock/user.ts";
 
 export default function LoginPage() {
   return (

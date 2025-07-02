@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // <---
-import type { User } from "../types";
+import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
 import { useLoginMutation } from "@/generated/graphql";
 import type { Role } from "@/types";
@@ -22,7 +21,7 @@ export default function Login({ children }: LoginProps) {
   const [error, setError] = useState("");
   const setUser = useUserStore((state) => state.setUser);
 
-  const navigate = useNavigate(); // <---
+  const navigate = useNavigate();
   const [loginMutation] = useLoginMutation();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,7 +42,7 @@ export default function Login({ children }: LoginProps) {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });
-        navigate("/chat"); // <--- redirection automatique
+        navigate("/chat");
       } else {
         setError("Identifiants incorrects");
       }

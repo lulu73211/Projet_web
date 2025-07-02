@@ -9,16 +9,16 @@ export interface User {
   lastName?: string | null;
   isActive: boolean;
   roles: Role[];
-  createdAt: string; // ou Date si tu restes côté Node
+  createdAt: string;
   updatedAt: string;
-  conversations?: Conversation[]; // optionnel si non inclus
+  conversations?: Conversation[];
   messages?: Message[];
-  jwt?: string | null; // pour ton front après login
+  jwt?: string | null; 
 }
 
 export interface Conversation {
   id: number;
-  users: User[]; // relation directe
+  users: User[];
   messages: Message[];
 }
 
@@ -28,6 +28,6 @@ export interface Message {
   createdAt: string;
   authorId: number;
   conversationId: number;
-  author?: User;           // optionnel si tu inclues l'auteur
+  author?: User;
   conversation?: Conversation;
 }
