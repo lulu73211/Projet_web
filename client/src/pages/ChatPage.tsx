@@ -10,16 +10,19 @@ import { useParams, useNavigate } from "react-router"
 
 import { conversationsMock } from "../mock/conversation"
 import type { Conversation, Message, User } from "@/types"
-import { useConversationsQuery } from "@/generated/graphql.tsx";
+import { useConversationLazyQuery, useConversationsQuery } from "@/generated/graphql.tsx";
 
 export default function ChatApp() {
     const { chatId } = useParams<{ chatId?: string }>()
     const navigate = useNavigate()
     const [newMessage, setNewMessage] = useState("")
     const [showPreview, setShowPreview] = useState(true)
-    const { data, loading, error } = useConversationsQuery();
+    const { data: conversationsData, loading: conversationsLoading, error: conversationsError } = useConversationsQuery();
+    const [fetchConversation, { data: conversationData, loading: conversationLoading, error: conversationError }] = useConversationLazyQuery();
+
 
     const [conversationStore, setConversationStore] = useState<Conversation[]>(conversationsMock)
+    const [currentConversation, setCurrentConversation] = useState<Conversation>()
 
     // Id fixe de l'utilisateur connecté (à remplacer par useUserStore plus tard)
     const myId = 1
@@ -31,7 +34,7 @@ export default function ChatApp() {
     }
 
     const imageUrl = extractImageUrl(newMessage)
-    const currentConversation = conversationStore.find(c => String(c.id) === chatId)
+    //const currentConversation = conversationStore.find(c => String(c.id) === chatId)
 
     const handleSend = () => {
         if (!chatId || newMessage.trim() === "") return
@@ -86,10 +89,23 @@ export default function ChatApp() {
     }
 
     useEffect(() => {
-        if ( data?.conversations !== undefined ){
-            setConversationStore(data?.conversations as Conversation[])
+        const fetchConv = async (id : number) => {
+            console.log(chatId)
+            await fetchConversation({ variables: { id : id } });
         }
-    },[data, setConversationStore])
+        console.log(conversationsData)
+        if ( conversationsData?.conversations !== undefined ){
+            setConversationStore(conversationsData?.conversations as Conversation[])
+        }
+        // if (chatId !== undefined){
+        //     fetchConv(Number(chatId)).then(()=> {
+        //         if(conversationData?.conversation !== undefined){
+        //             setCurrentConversation(conversationData?.conversation as Conversation)
+        //         }
+        //     })
+        //     console.log(conversationData)
+        // }
+    },[conversationsData, setConversationStore, conversationData, chatId, fetchConversation])
 
     const getUserName = (authorId: number, conv: Conversation) => {
         return conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
