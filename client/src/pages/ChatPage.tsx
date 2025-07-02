@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -10,12 +10,14 @@ import { useParams, useNavigate } from "react-router"
 
 import { conversationsMock } from "../mock/conversation"
 import type { Conversation, Message, User } from "@/types"
+import { useConversationsQuery } from "@/generated/graphql.tsx";
 
 export default function ChatApp() {
     const { chatId } = useParams<{ chatId?: string }>()
     const navigate = useNavigate()
     const [newMessage, setNewMessage] = useState("")
     const [showPreview, setShowPreview] = useState(true)
+    const { data, loading, error } = useConversationsQuery();
 
     const [conversationStore, setConversationStore] = useState<Conversation[]>(conversationsMock)
 
@@ -82,6 +84,12 @@ export default function ChatApp() {
     const handleSelectConversation = (id: number) => {
         navigate(`/chat/${id}`)
     }
+
+    useEffect(() => {
+        if ( data?.conversations !== undefined ){
+            setConversationStore(data?.conversations as Conversation[])
+        }
+    },[data, setConversationStore])
 
     const getUserName = (authorId: number, conv: Conversation) => {
         return conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
