@@ -361,6 +361,12 @@ export default function ChatApp() {
               <Textarea
                 value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
                 rows={1}
                 placeholder="Écrire un message..."
                 className="resize-none"
