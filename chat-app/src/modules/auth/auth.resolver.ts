@@ -8,6 +8,7 @@ import { Roles } from './decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { User } from '../user/entities/user.entity';
+import { GqlAuthGuard } from 'src/common/guards/gql-local-auth.guard';
 
 @Resolver(() => User)
 export class AuthResolver {
@@ -28,7 +29,7 @@ export class AuthResolver {
   }
 
   @Query(() => User)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(GqlAuthGuard)
   async me(@CurrentUser() user: User): Promise<User> {
     return user;
   }

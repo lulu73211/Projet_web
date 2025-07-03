@@ -31,6 +31,7 @@ import Joi from 'joi';
       subscriptions: {
         'graphql-ws': true,
       },
+      context: ({ req }) => ({ req }),
     }),
     PrismaModule,
     AuthModule,

@@ -28,4 +28,20 @@ export class ConversationService {
       include: { users: true, messages: true },
     });
   }
+
+  async getByUserId(userId: number) {
+    return this.prisma.conversation.findMany({
+      where: {
+        users: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+      include: {
+        users: true,
+        messages: true,
+      },
+    });
+  }
 }
