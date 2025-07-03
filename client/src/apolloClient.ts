@@ -24,7 +24,7 @@ const authLink = setContext((_, { headers }) => {
 // Création du lien WebSocket pour les subscriptions, aussi avec le token
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://localhost:3001/graphql",
+    url: "ws://localhost:3000/graphql",
     connectionParams: () => {
       const token = localStorage.getItem("token");
       return {

@@ -207,6 +207,11 @@ export type RegisterMutationVariables = Exact<{
 
 export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthResponse', accessToken: string, user: { __typename?: 'User', id: number, email: string, username: string, roles: Array<string> } } };
 
+export type MessageSendSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MessageSendSubscription = { __typename?: 'Subscription', messageSend: { __typename?: 'MessagePayload', content: string, authorId: number, conversationId: number } };
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -466,6 +471,37 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const MessageSendDocument = gql`
+    subscription MessageSend {
+  messageSend {
+    content
+    authorId
+    conversationId
+  }
+}
+    `;
+
+/**
+ * __useMessageSendSubscription__
+ *
+ * To run a query within a React component, call `useMessageSendSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useMessageSendSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMessageSendSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useMessageSendSubscription(baseOptions?: Apollo.SubscriptionHookOptions<MessageSendSubscription, MessageSendSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<MessageSendSubscription, MessageSendSubscriptionVariables>(MessageSendDocument, options);
+      }
+export type MessageSendSubscriptionHookResult = ReturnType<typeof useMessageSendSubscription>;
+export type MessageSendSubscriptionResult = Apollo.SubscriptionResult<MessageSendSubscription>;
 export const MeDocument = gql`
     query Me {
   me {
