@@ -8,34 +8,30 @@ import { Avatar } from "@/components/ui/avatar"
 import { Send, X, Plus } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
 import { useConversationsQuery, useConversationLazyQuery, useCreateConversationMutation, useSendMessageMutation } from "@/generated/graphql.tsx"
-import type { Conversation, Message } from "@/types"
+import type { Conversation } from "@/types"
 import { useUserStore } from "@/store/userStore"
-import { useMessageSendSubscription  } from "@/generated/graphql"
+import { useMessageSendSubscription } from "@/generated/graphql"
 
 export default function ChatApp() {
   const { chatId } = useParams<{ chatId?: string }>()
   const navigate = useNavigate()
-  const { data, loading, error } = useMessageSendSubscription()
+  const { data } = useMessageSendSubscription()
   // States
   const [conversationStore, setConversationStore] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [newMessage, setNewMessage] = useState("")
   const [showPreview, setShowPreview] = useState(true)
   const [creatingConv, setCreatingConv] = useState(false)
-  const [newUserId, setNewUserId] = useState<string>("") // ou email, selon ta logique
+  const [newUserIds, setNewUserIds] = useState<string>("")
   const [errorCreating, setErrorCreating] = useState("")
 
-  // Fix user ID connecté - à remplacer par contexte/store utilisateur
   const user = useUserStore(state => state.user)
-  const myId = user?.id || 1; // Remplace par l'ID de l'utilisateur connecté
-  // Queries & Mutations
-  const { data: conversationsData, loading: conversationsLoading, error: conversationsError, refetch } = useConversationsQuery()
-  const [fetchConversation, { data: conversationData, loading: conversationLoading, error: conversationError }] = useConversationLazyQuery()
+  const myId = user?.id || 1
+  const { data: conversationsData } = useConversationsQuery()
+  const [fetchConversation, { data: conversationData }] = useConversationLazyQuery()
   const [createConversationMutation, { loading: createLoading }] = useCreateConversationMutation()
-
-  const [sendMessageMutation, { loading: sending }] = useSendMessageMutation();
+  const [sendMessageMutation] = useSendMessageMutation()
     
-  // Charger les conversations au montage / update
   useEffect(() => {
     if (conversationsData?.conversations) {
       setConversationStore(conversationsData.conversations)
@@ -43,62 +39,49 @@ export default function ChatApp() {
   }, [conversationsData])
 
   useEffect(() => {
-  if (data?.messageSend) {
-    const newMsg = data.messageSend
-
-    setConversationStore(prevConversations => {
-      // Mise à jour de la conversation concernée par le message reçu
-      return prevConversations.map(conv => {
-        if (conv.id === newMsg.conversationId) {
-          // Vérifie qu'on n'a pas déjà ce message (id ici manquant dans subscription, à gérer)
-          // On suppose ici que le contenu + author + date est unique pour simplifier
-
-          const exists = conv.messages.some(msg => 
-            msg.content === newMsg.content &&
-            msg.authorId === newMsg.authorId &&
-            msg.conversationId === newMsg.conversationId
-          )
-          if (exists) return conv
-
-          return {
-            ...conv,
-            messages: [...conv.messages, {
-              id: conv.messages.length + 1,  // ATTENTION : Id provisoire, idéalement à venir du backend
-              content: newMsg.content,
-              createdAt: new Date().toISOString(), // On pourrait recevoir une date dans payload ?
-              authorId: newMsg.authorId,
-              conversationId: newMsg.conversationId,
-            }],
-          }
-        }
-        return conv
-      })
-    })
-    setCurrentConversation(prevConv => {
-      if (prevConv && prevConv.id === newMsg.conversationId) {
-        const exists = prevConv.messages.some(msg => 
-          msg.content === newMsg.content &&
-          msg.authorId === newMsg.authorId
+    if (data?.messageSend) {
+      const newMsg = data.messageSend
+      setConversationStore(prev =>
+        prev.map(conv =>
+          conv.id === newMsg.conversationId
+            ? {
+                ...conv,
+                messages: conv.messages.some(m =>
+                  m.content === newMsg.content && m.authorId === newMsg.authorId
+                )
+                  ? conv.messages
+                  : [...conv.messages, {
+                      id: conv.messages.length + 1,
+                      content: newMsg.content,
+                      createdAt: new Date().toISOString(),
+                      authorId: newMsg.authorId,
+                      conversationId: newMsg.conversationId,
+                    }]
+              }
+            : conv
         )
-        if (exists) return prevConv
-
-        return {
-          ...prevConv,
-          messages: [...prevConv.messages, {
-            id: prevConv.messages.length + 1,
-            content: newMsg.content,
-            createdAt: new Date().toISOString(),
-            authorId: newMsg.authorId,
-            conversationId: newMsg.conversationId,
-          }],
-        }
-      }
-      return prevConv
-    })
-  }
+      )
+      setCurrentConversation(prev =>
+        prev && prev.id === newMsg.conversationId
+          ? {
+              ...prev,
+              messages: prev.messages.some(m => 
+                m.content === newMsg.content && m.authorId === newMsg.authorId
+              )
+                ? prev.messages
+                : [...prev.messages, {
+                    id: prev.messages.length + 1,
+                    content: newMsg.content,
+                    createdAt: new Date().toISOString(),
+                    authorId: newMsg.authorId,
+                    conversationId: newMsg.conversationId,
+                  }]
+            }
+          : prev
+      )
+    }
   }, [data])
 
-  // Charger conversation active au changement de chatId
   useEffect(() => {
     if (chatId) {
       fetchConversation({ variables: { id: Number(chatId) } })
@@ -107,130 +90,92 @@ export default function ChatApp() {
     }
   }, [chatId, fetchConversation])
 
-  // Mettre à jour currentConversation quand conversationData arrive
   useEffect(() => {
     if (conversationData?.conversation) {
       setCurrentConversation(conversationData.conversation)
     }
   }, [conversationData])
 
-  // Fonction utilitaire extraction image URL
   const extractImageUrl = (text: string): string | null => {
     const regex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/i
     const match = text.match(regex)
     return match ? match[1] : null
   }
 
-  // Envoi d’un message local (à adapter pour mutation backend)
   const handleSend = async () => {
-  if (!chatId || newMessage.trim() === "") return;
-
-  const image = extractImageUrl(newMessage);
-  const text = image ? newMessage.replace(image, "").trim() : newMessage.trim();
-
-  try {
-    // Si image, on envoie un message avec le contenu image
-    if (image) {
-      await sendMessageMutation({
-        variables: {
-          input: {
-            content: image,
-            authorId: myId,
-            conversationId: Number(chatId),
-          },
-        },
-      });
+    if (!chatId || newMessage.trim() === "") return
+    const image = extractImageUrl(newMessage)
+    const text = image ? newMessage.replace(image, "").trim() : newMessage.trim()
+    try {
+      if (image) {
+        await sendMessageMutation({ variables: { input: { content: image, authorId: myId, conversationId: Number(chatId) }}})
+      }
+      if (text) {
+        await sendMessageMutation({ variables: { input: { content: text, authorId: myId, conversationId: Number(chatId) }}})
+      }
+      setNewMessage("")
+      setShowPreview(true)
+    } catch (err) {
+      console.error("Erreur lors de l'envoi du message:", err)
     }
-
-    // Si texte, on envoie un message texte
-    if (text) {
-      await sendMessageMutation({
-        variables: {
-          input: {
-            content: text,
-            authorId: myId,
-            conversationId: Number(chatId),
-          },
-        },
-      });
-    }
-
-    // Reset input
-    setNewMessage("");
-    setShowPreview(true);
-
-  } catch (error) {
-    console.error("Erreur lors de l'envoi du message:", error);
   }
-};
 
-  // Supprimer image du message en édition
   const imageUrl = extractImageUrl(newMessage)
   const handleRemoveImage = () => {
     if (!imageUrl) return
     setShowPreview(false)
-    setTimeout(() => {
-      setNewMessage((prev) => prev.replace(imageUrl, "").trim())
-    }, 100)
+    setTimeout(() => setNewMessage(prev => prev.replace(imageUrl, "").trim()), 100)
   }
 
-  // Sélection d’une conversation
   const handleSelectConversation = (id: number) => {
     navigate(`/chat/${id}`)
     setCreatingConv(false)
-    setNewUserId("")
+    setNewUserIds("")
     setErrorCreating("")
   }
 
-  // Création d’une nouvelle conversation
   const handleCreateConversation = async () => {
-    if (!newUserId.trim()) {
-      setErrorCreating("Veuillez saisir un identifiant valide")
+    if (!newUserIds.trim()) {
+      setErrorCreating("Veuillez saisir au moins un identifiant")
       return
     }
     setErrorCreating("")
     try {
-      if (!user?.id) return;
-      const res = await createConversationMutation({
-        variables: { userIds: [user?.id, Number(newUserId)] },
-      })
-
+      if (!user?.id) return
+      const ids = newUserIds.split(",").map(s => Number(s.trim())).filter(n => !isNaN(n))
+      if (!ids.includes(user.id)) ids.unshift(user.id)
+      const res = await createConversationMutation({ variables: { userIds: ids }})
       if (res.data?.createConversation) {
-        // Ajoute la conversation créée à la liste
-        setConversationStore((prev) => [...prev, res.data.createConversation])
-        // Navigue vers la nouvelle conversation
+        setConversationStore(prev => [...prev, res.data.createConversation])
         navigate(`/chat/${res.data.createConversation.id}`)
         setCreatingConv(false)
-        setNewUserId("")
+        setNewUserIds("")
       } else {
         setErrorCreating("Impossible de créer la conversation")
       }
-    } catch (error) {
+    } catch (err) {
       setErrorCreating("Erreur lors de la création de la conversation")
-      console.error(error)
+      console.error(err)
     }
   }
 
-  // Fonctions pour noms utilisateurs
-    
   const getUserName = (authorId: number, conv: Conversation) =>
-    conv.users.find((u) => u.id === authorId)?.username || `User #${authorId}`
+    conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
 
   const getOtherParticipantName = (conv: Conversation) => {
-    const otherUser = conv.users.find((u) => u.id !== myId)
+    const otherUser = conv.users.find(u => u.id !== myId)
     return otherUser?.username || "Participant"
   }
 
   return (
     <div className="flex h-screen w-full">
-      {/* Sidebar */}
       <aside className="w-64 bg-muted border-r p-4 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Conversations</h2>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCreatingConv((v) => !v)}
+            onClick={() => setCreatingConv(v => !v)}
             aria-label="Créer nouvelle conversation"
           >
             <Plus className="w-4 h-4" />
@@ -241,9 +186,9 @@ export default function ChatApp() {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="ID utilisateur (ex: 2)"
-              value={newUserId}
-              onChange={(e) => setNewUserId(e.target.value)}
+              placeholder="IDs utilisateurs séparés par virgule (ex: 2,3,4)"
+              value={newUserIds}
+              onChange={(e) => setNewUserIds(e.target.value)}
               className="w-full p-2 border rounded"
             />
             {errorCreating && <p className="text-red-600 text-sm">{errorCreating}</p>}
@@ -274,7 +219,6 @@ export default function ChatApp() {
         </ScrollArea>
       </aside>
 
-      {/* Chat window */}
       <main className="flex flex-col flex-1">
         {currentConversation ? (
           <Card className="flex flex-col flex-1 rounded-none">
@@ -326,7 +270,6 @@ export default function ChatApp() {
                 placeholder="Écrire un message..."
                 className="resize-none"
               />
-
               <AnimatePresence>
                 {showPreview && imageUrl && (
                   <motion.div
@@ -347,7 +290,6 @@ export default function ChatApp() {
                   </motion.div>
                 )}
               </AnimatePresence>
-
               <Button type="submit" disabled={newMessage.trim() === ""} aria-label="Envoyer">
                 <Send />
               </Button>
