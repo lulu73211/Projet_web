@@ -16,7 +16,6 @@ export default function ChatApp() {
   const { chatId } = useParams<{ chatId?: string }>()
   const navigate = useNavigate()
   const { data } = useMessageSendSubscription()
-  // States
   const [conversationStore, setConversationStore] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [newMessage, setNewMessage] = useState("")
@@ -31,7 +30,7 @@ export default function ChatApp() {
   const [fetchConversation, { data: conversationData }] = useConversationLazyQuery()
   const [createConversationMutation, { loading: createLoading }] = useCreateConversationMutation()
   const [sendMessageMutation] = useSendMessageMutation()
-    
+
   useEffect(() => {
     if (conversationsData?.conversations) {
       setConversationStore(conversationsData.conversations)
@@ -162,10 +161,11 @@ export default function ChatApp() {
   const getUserName = (authorId: number, conv: Conversation) =>
     conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
 
-  const getOtherParticipantName = (conv: Conversation) => {
-    const otherUser = conv.users.find(u => u.id !== myId)
-    return otherUser?.username || "Participant"
-  }
+  const getConversationName = (conv: Conversation) =>
+    [...conv.users] // ✅ copie pour éviter le sort sur tableau immutable
+      .sort((a, b) => a.id - b.id)
+      .map(u => u.username)
+      .join(", ")
 
   return (
     <div className="flex h-screen w-full">
@@ -212,7 +212,7 @@ export default function ChatApp() {
                 className="justify-start"
               >
                 <Avatar className="mr-2 h-6 w-6" />
-                {getOtherParticipantName(conv)}
+                {getConversationName(conv)}
               </Button>
             ))}
           </div>
@@ -224,7 +224,7 @@ export default function ChatApp() {
           <Card className="flex flex-col flex-1 rounded-none">
             <CardHeader className="border-b">
               <h3 className="text-lg font-semibold text-center">
-                {getOtherParticipantName(currentConversation)}
+                {getConversationName(currentConversation)}
               </h3>
             </CardHeader>
 
