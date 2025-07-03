@@ -21,19 +21,6 @@ export default function Sidebar() {
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" asChild>
-                                <Link to="/">
-                                    <Home className="w-5 h-5" />
-                                </Link>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                            <p>Accueil</p>
-                        </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" asChild>
                                 <Link to="/chat">
                                     <MessageSquare className="w-5 h-5" />
                                 </Link>

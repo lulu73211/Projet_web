@@ -60,6 +60,7 @@ type Query {
   getMessages(conversationId: Int!): [MessageEntity!]!
   conversations: [ConversationModel!]!
   conversation(id: Int!): ConversationModel
+  myConversations: [ConversationModel!]!
 }
 
 type Mutation {

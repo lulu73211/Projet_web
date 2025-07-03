@@ -1,4 +1,3 @@
-// src/pages/LoginPage.tsx
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,17 +11,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "react-router-dom"
-import type { User } from "../types"
 import Login from "../components/Login"
-import { useState } from "react";
-import { usersMock } from "@/mock/user.ts";
 
 export default function LoginPage() {
-  const [users] = useState<User[]>(usersMock);
-
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Login users={users}>
+      <Login>
         {({ email, password, error, onEmailChange, onPasswordChange, onSubmit }) => (
           <Card className="w-full max-w-sm">
             <CardHeader>
@@ -83,3 +77,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

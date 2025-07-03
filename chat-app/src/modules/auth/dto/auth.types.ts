@@ -53,7 +53,7 @@ export class RegisterInput {
 @ObjectType()
 export class JwtPayload {
   @Field()
-  sub: string;
+  sub: number;
 
   @Field()
   email: string;

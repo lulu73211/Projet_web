@@ -1,0 +1,55 @@
+query Conversations {
+  conversations {
+    id
+    users {
+      id
+      username
+    }
+    messages {
+      id
+      content
+      author {
+        id
+        username
+      }
+    }
+  }
+}
+
+query Conversation($id: Int!) {
+  conversation(id: $id) {
+    id
+    users {
+      id
+      username
+    }
+    messages {
+      id
+      content
+      author {
+        id
+        username
+      }
+    }
+  }
+}
+
+mutation CreateConversation($userIds: [Int!]!) {
+  createConversation(userIds: $userIds) {
+    id
+    users {
+      id
+      username
+    }
+  }
+}
+
+query MyConversations {
+  myConversations {
+    id
+    users {
+      id
+      username
+    }
+  }
+}

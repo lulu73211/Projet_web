@@ -2,9 +2,11 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "../types";
 
+type LocalUser = Pick<User, "id" | "email" | "username"> & Partial<User>;
+
 type UserStore = {
-    user: User | null;
-    setUser: (user: User | null) => void;
+    user: LocalUser | null;
+    setUser: (user: LocalUser) => void;
     updateUser: (partial: Partial<User>) => void;
     clearUser: () => void;
 };
