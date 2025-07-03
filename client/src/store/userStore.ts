@@ -1,0 +1,31 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { User } from "../types";
+
+type LocalUser = Pick<User, "id" | "email" | "username"> & Partial<User>;
+
+type UserStore = {
+    user: LocalUser | null;
+    setUser: (user: LocalUser) => void;
+    updateUser: (partial: Partial<User>) => void;
+    clearUser: () => void;
+};
+
+export const useUserStore = create<UserStore>()(
+    persist(
+        (set, get) => ({
+            user: null,
+            setUser: (user) => set({ user }),
+            updateUser: (partial) => {
+                const currentUser = get().user;
+                if (!currentUser) return;
+                set({ user: { ...currentUser, ...partial } });
+            },
+            clearUser: () => set({ user: null }),
+        }),
+        {
+            name: "user-store",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);

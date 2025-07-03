@@ -1,0 +1,16 @@
+mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input)
+}
+
+query GetMessages($conversationId: Int!) {
+  getMessages(conversationId: $conversationId) {
+    id
+    content
+    createdAt
+    author {
+      id
+      username
+    }
+  }
+}
+
