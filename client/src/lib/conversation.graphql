@@ -41,13 +41,15 @@ mutation CreateConversation($userIds: [Int!]!) {
       id
       username
     }
-    messages {
-      id
-      content
-    }
   }
 }
 
-mutation SendMessage($input: SendMessageInput!) {
-  sendMessage(input: $input)
+query MyConversations {
+  myConversations {
+    id
+    users {
+      id
+      username
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -7,17 +7,41 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar } from "@/components/ui/avatar"
 import { Send, X, Plus } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
-import { useConversationsQuery, useConversationLazyQuery, useCreateConversationMutation, useSendMessageMutation } from "@/generated/graphql.tsx"
-import type { Conversation } from "@/types"
+import {
+  useMyConversationsQuery,
+  useGetMessagesLazyQuery,
+  useCreateConversationMutation,
+  useSendMessageMutation,
+  useConversationLazyQuery,
+} from "@/generated/graphql.tsx"
 import { useUserStore } from "@/store/userStore"
+import type { ConversationModel } from "@/generated/graphql"
 import { useMessageSendSubscription } from "@/generated/graphql"
+
+// Type local pour les messages avec les champs nécessaires
+interface LocalMessage {
+  id: number
+  content: string
+  createdAt: string
+  authorId: number
+  conversationId: number
+  author: {
+    id: number
+    username: string
+  }
+}
+
+// Type local pour simplifier la gestion des conversations
+type LocalConversation = Pick<ConversationModel, 'id' | 'users'>
 
 export default function ChatApp() {
   const { chatId } = useParams<{ chatId?: string }>()
   const navigate = useNavigate()
-  const { data } = useMessageSendSubscription()
-  const [conversationStore, setConversationStore] = useState<Conversation[]>([])
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
+  const { data: subscriptionData } = useMessageSendSubscription()
+
+  const [conversationStore, setConversationStore] = useState<LocalConversation[]>([])
+  const [currentConversation, setCurrentConversation] = useState<LocalConversation | null>(null)
+  const [messagesStore, setMessagesStore] = useState<Map<number, LocalMessage[]>>(new Map())
   const [newMessage, setNewMessage] = useState("")
   const [showPreview, setShowPreview] = useState(true)
   const [creatingConv, setCreatingConv] = useState(false)
@@ -26,91 +50,139 @@ export default function ChatApp() {
 
   const user = useUserStore(state => state.user)
   const myId = user?.id || 1
-  const { data: conversationsData } = useConversationsQuery()
+
+  const { data: conversationsData, refetch: refetchConversations } = useMyConversationsQuery()
+  const [fetchMessage, { data: conversationMessage }] = useGetMessagesLazyQuery()
   const [fetchConversation, { data: conversationData }] = useConversationLazyQuery()
+
   const [createConversationMutation, { loading: createLoading }] = useCreateConversationMutation()
   const [sendMessageMutation] = useSendMessageMutation()
 
+  // Chargement initial des conversations et sélection selon chatId
   useEffect(() => {
-    if (conversationsData?.conversations) {
-      setConversationStore(conversationsData.conversations)
+    if (conversationsData?.myConversations) {
+      setConversationStore(conversationsData.myConversations as LocalConversation[])
+      if (chatId) {
+        const conv = conversationsData.myConversations.find(c => String(c.id) === chatId)
+        setCurrentConversation(conv as LocalConversation || null)
+      } else {
+        setCurrentConversation(null)
+      }
     }
-  }, [conversationsData])
+  }, [conversationsData, chatId])
 
+  // Mise à jour du store des messages lors de la réception d'un nouveau message par subscription
   useEffect(() => {
-    if (data?.messageSend) {
-      const newMsg = data.messageSend
-      setConversationStore(prev =>
-        prev.map(conv =>
-          conv.id === newMsg.conversationId
-            ? {
-                ...conv,
-                messages: conv.messages.some(m =>
-                  m.content === newMsg.content && m.authorId === newMsg.authorId
-                )
-                  ? conv.messages
-                  : [...conv.messages, {
-                      id: conv.messages.length + 1,
-                      content: newMsg.content,
-                      createdAt: new Date().toISOString(),
-                      authorId: newMsg.authorId,
-                      conversationId: newMsg.conversationId,
-                    }]
-              }
-            : conv
+    if (subscriptionData?.messageSend) {
+      const newMsg = subscriptionData.messageSend
+      const conversationId = newMsg.conversationId
+      
+      // Trouver la conversation pour récupérer les infos utilisateur
+      const conversation = conversationStore.find(c => c.id === conversationId)
+      const author = conversation?.users.find(u => u.id === newMsg.authorId)
+      
+      setMessagesStore(prev => {
+        const currentMessages = prev.get(conversationId) || []
+        
+        // Éviter les doublons
+        const isDuplicate = currentMessages.some(m =>
+          m.content === newMsg.content && m.authorId === newMsg.authorId
         )
-      )
-      setCurrentConversation(prev =>
-        prev && prev.id === newMsg.conversationId
-          ? {
-              ...prev,
-              messages: prev.messages.some(m => 
-                m.content === newMsg.content && m.authorId === newMsg.authorId
-              )
-                ? prev.messages
-                : [...prev.messages, {
-                    id: prev.messages.length + 1,
-                    content: newMsg.content,
-                    createdAt: new Date().toISOString(),
-                    authorId: newMsg.authorId,
-                    conversationId: newMsg.conversationId,
-                  }]
-            }
-          : prev
-      )
+        
+        if (isDuplicate) return prev
+        
+        const newMessage: LocalMessage = {
+          id: Date.now(), // ID temporaire
+          content: newMsg.content,
+          createdAt: new Date().toISOString(),
+          authorId: newMsg.authorId,
+          conversationId: newMsg.conversationId,
+          author: {
+            id: newMsg.authorId,
+            username: author?.username || `User #${newMsg.authorId}`
+          }
+        }
+        
+        const updatedMessages = [...currentMessages, newMessage]
+        const newMap = new Map(prev)
+        newMap.set(conversationId, updatedMessages)
+        return newMap
+      })
     }
-  }, [data])
+  }, [subscriptionData, conversationStore])
 
+  // Chargement des messages si non déjà dans le store quand on change de conversation
   useEffect(() => {
-    if (chatId) {
-      fetchConversation({ variables: { id: Number(chatId) } })
-    } else {
-      setCurrentConversation(null)
+    if (!chatId) return
+    const conversationId = Number(chatId)
+    const existingMessages = messagesStore.get(conversationId)
+    
+    if (existingMessages && existingMessages.length > 0) {
+      return // Messages déjà chargés
     }
-  }, [chatId, fetchConversation])
+    
+    fetchMessage({ variables: { conversationId } })
+  }, [chatId, messagesStore, fetchMessage])
 
+  // Mise à jour du store avec les messages récupérés via getMessage
+  useEffect(() => {
+    if (conversationMessage?.getMessages && chatId) {
+      const conversationId = Number(chatId)
+      const messages: LocalMessage[] = conversationMessage.getMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        createdAt: msg.createdAt,
+        authorId: msg.author.id,
+        conversationId: conversationId,
+        author: {
+          id: msg.author.id,
+          username: msg.author.username
+        }
+      }))
+      
+      setMessagesStore(prev => {
+        const newMap = new Map(prev)
+        newMap.set(conversationId, messages)
+        return newMap
+      })
+    }
+  }, [conversationMessage, chatId])
+
+  // Mise à jour de la conversation courante depuis lazy query
   useEffect(() => {
     if (conversationData?.conversation) {
-      setCurrentConversation(conversationData.conversation)
+      setCurrentConversation(conversationData.conversation as LocalConversation)
+      setConversationStore(prev => {
+        if (!prev.some(c => c.id === conversationData.conversation!.id)) {
+          return [...prev, conversationData.conversation! as LocalConversation]
+        }
+        return prev
+      })
     }
   }, [conversationData])
 
+  // Extraction d'une URL d'image dans un texte
   const extractImageUrl = (text: string): string | null => {
     const regex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/i
     const match = text.match(regex)
     return match ? match[1] : null
   }
 
+  // Envoi du message (envoi image et texte séparés si les deux sont présents)
   const handleSend = async () => {
     if (!chatId || newMessage.trim() === "") return
     const image = extractImageUrl(newMessage)
     const text = image ? newMessage.replace(image, "").trim() : newMessage.trim()
     try {
       if (image) {
-        await sendMessageMutation({ variables: { input: { content: image, authorId: myId, conversationId: Number(chatId) }}})
+        await sendMessageMutation({
+          variables: { input: { content: image, authorId: myId, conversationId: Number(chatId) } },
+        })
       }
       if (text) {
-        await sendMessageMutation({ variables: { input: { content: text, authorId: myId, conversationId: Number(chatId) }}})
+        await sendMessageMutation({
+          variables: { input: { content: text, authorId: myId, conversationId: Number(chatId) } },
+        })
       }
       setNewMessage("")
       setShowPreview(true)
@@ -119,6 +191,7 @@ export default function ChatApp() {
     }
   }
 
+  // Suppression de l'image dans le textarea (cache la preview puis supprime le lien)
   const imageUrl = extractImageUrl(newMessage)
   const handleRemoveImage = () => {
     if (!imageUrl) return
@@ -126,6 +199,7 @@ export default function ChatApp() {
     setTimeout(() => setNewMessage(prev => prev.replace(imageUrl, "").trim()), 100)
   }
 
+  // Sélection d'une conversation dans la liste (navigue + reset création)
   const handleSelectConversation = (id: number) => {
     navigate(`/chat/${id}`)
     setCreatingConv(false)
@@ -133,6 +207,7 @@ export default function ChatApp() {
     setErrorCreating("")
   }
 
+  // Création d'une nouvelle conversation avec IDs d'utilisateurs
   const handleCreateConversation = async () => {
     if (!newUserIds.trim()) {
       setErrorCreating("Veuillez saisir au moins un identifiant")
@@ -141,12 +216,29 @@ export default function ChatApp() {
     setErrorCreating("")
     try {
       if (!user?.id) return
-      const ids = newUserIds.split(",").map(s => Number(s.trim())).filter(n => !isNaN(n))
+      const ids = newUserIds
+        .split(",")
+        .map(s => Number(s.trim()))
+        .filter(n => !isNaN(n))
+
       if (!ids.includes(user.id)) ids.unshift(user.id)
-      const res = await createConversationMutation({ variables: { userIds: ids }})
+
+      const res = await createConversationMutation({ variables: { userIds: ids } })
+
       if (res.data?.createConversation) {
-        setConversationStore(prev => [...prev, res.data.createConversation])
-        navigate(`/chat/${res.data.createConversation.id}`)
+        const newConv = {
+          ...res.data.createConversation,
+          users: res.data.createConversation.users || [],
+          messages: [], // Evite erreur .map sur undefined
+        }
+
+        // Ajouter la conversation au store local
+        setConversationStore(prev => [...prev, newConv as unknown as LocalConversation])
+        
+        // Refetch les conversations pour synchroniser avec le serveur
+        refetchConversations()
+        
+        navigate(`/chat/${newConv.id}`)
         setCreatingConv(false)
         setNewUserIds("")
       } else {
@@ -158,11 +250,22 @@ export default function ChatApp() {
     }
   }
 
-  const getUserName = (authorId: number, conv: Conversation) =>
-    conv.users.find(u => u.id === authorId)?.username || `User #${authorId}`
+  // Si chatId change et que la conversation n'est pas en store, fetch côté serveur
+  useEffect(() => {
+    if (!chatId || !conversationStore.length) return
 
-  const getConversationName = (conv: Conversation) =>
-    [...conv.users] // ✅ copie pour éviter le sort sur tableau immutable
+    const conv = conversationStore.find(c => String(c.id) === chatId)
+    if (conv) {
+      setCurrentConversation(conv)
+      fetchMessage({ variables: { conversationId: Number(chatId) } })
+    } else {
+      fetchConversation({ variables: { id: Number(chatId) } })
+    }
+  }, [chatId, conversationStore, fetchMessage, fetchConversation])
+
+  // Helper pour générer le nom d'une conversation (concat utilisateurs triés)
+  const getConversationName = (conv: ConversationModel) =>
+    [...conv.users]
       .sort((a, b) => a.id - b.id)
       .map(u => u.username)
       .join(", ")
@@ -188,15 +291,11 @@ export default function ChatApp() {
               type="text"
               placeholder="IDs utilisateurs séparés par virgule (ex: 2,3,4)"
               value={newUserIds}
-              onChange={(e) => setNewUserIds(e.target.value)}
+              onChange={e => setNewUserIds(e.target.value)}
               className="w-full p-2 border rounded"
             />
             {errorCreating && <p className="text-red-600 text-sm">{errorCreating}</p>}
-            <Button
-              onClick={handleCreateConversation}
-              disabled={createLoading}
-              className="mt-2 w-full"
-            >
+            <Button onClick={handleCreateConversation} disabled={createLoading} className="mt-2 w-full">
               {createLoading ? "Création..." : "Créer"}
             </Button>
           </div>
@@ -204,7 +303,7 @@ export default function ChatApp() {
 
         <ScrollArea className="flex-1">
           <div className="flex flex-col gap-2">
-            {conversationStore.map((conv) => (
+            {conversationStore.map(conv => (
               <Button
                 key={conv.id}
                 variant={chatId === String(conv.id) ? "secondary" : "ghost"}
@@ -223,30 +322,26 @@ export default function ChatApp() {
         {currentConversation ? (
           <Card className="flex flex-col flex-1 rounded-none">
             <CardHeader className="border-b">
-              <h3 className="text-lg font-semibold text-center">
-                {getConversationName(currentConversation)}
-              </h3>
+              <h3 className="text-lg font-semibold text-center">{getConversationName(currentConversation)}</h3>
             </CardHeader>
 
             <CardContent className="flex-1 overflow-hidden p-0">
               <ScrollArea className="w-auto p-4" style={{ height: 600 }}>
                 <div className="flex flex-col gap-3">
-                  {currentConversation.messages.map((msg) => {
+                  {(messagesStore.get(Number(chatId)) || []).map(msg => {
                     const image = extractImageUrl(msg.content)
                     return (
                       <div
                         key={msg.id}
                         className={`max-w-sm rounded-lg px-4 py-2 text-sm ${
-                          msg.authorId === myId
-                            ? "bg-primary text-white self-end"
-                            : "bg-muted text-black self-start"
+                          msg.authorId === myId ? "bg-primary text-white self-end" : "bg-muted text-black self-start"
                         }`}
                       >
                         {image ? (
                           <img src={image} alt="image" className="max-w-full rounded-md" />
                         ) : (
                           <>
-                            <b>{getUserName(msg.authorId, currentConversation)}</b>: {msg.content}
+                            <b>{msg.author.username}</b>: {msg.content}
                           </>
                         )}
                       </div>
@@ -257,7 +352,7 @@ export default function ChatApp() {
             </CardContent>
 
             <form
-              onSubmit={(e) => {
+              onSubmit={e => {
                 e.preventDefault()
                 handleSend()
               }}
@@ -265,7 +360,7 @@ export default function ChatApp() {
             >
               <Textarea
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={e => setNewMessage(e.target.value)}
                 rows={1}
                 placeholder="Écrire un message..."
                 className="resize-none"
