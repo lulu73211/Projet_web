@@ -9,7 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-  
+
   redis:
     image: redis:7
     ports:
@@ -34,8 +34,6 @@ services:
       - postgres
       - redis
       - rabbitmq
-    volumes:
-      - ./chat-app:/app
 
   frontend:
     build:
@@ -45,8 +43,6 @@ services:
       - "9400:80"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
 
 volumes:
   postgres-data:
