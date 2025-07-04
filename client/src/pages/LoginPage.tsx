@@ -38,22 +38,12 @@ export default function LoginPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="m@example.com"
                       required
                       value={email}
                       onChange={onEmailChange}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="password">Mot de passe</Label>
-                      <a
-                        href="#"
-                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                      >
-                        Mot de passe oublié?
-                      </a>
-                    </div>
                     <Input
                       id="password"
                       type="password"

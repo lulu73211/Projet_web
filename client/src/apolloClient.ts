@@ -6,7 +6,7 @@ import { setContext } from "@apollo/client/link/context";
 
 // Création du lien HTTP classique
 const httpLink = new HttpLink({
-  uri: "http://localhost:3000/graphql",
+  uri: import.meta.env.VITE_API_URL ,
 });
 
 // Ajoute le header Authorization si token trouvé
@@ -24,7 +24,7 @@ const authLink = setContext((_, { headers }) => {
 // Création du lien WebSocket pour les subscriptions, aussi avec le token
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://localhost:3000/graphql",
+    url: import.meta.env.VITE_API_WS,
     connectionParams: () => {
       const token = localStorage.getItem("token");
       return {

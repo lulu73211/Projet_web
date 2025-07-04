@@ -13,7 +13,7 @@ export default function PrivateRoute({ children }: PrivateRouteProps) {
     const setUser = useUserStore((state) => state.setUser);
 
     // Fait appel au hook généré par codegen pour /me
-    const { data, loading, error } = useMeQuery({
+    const { data, loading } = useMeQuery({
         fetchPolicy: "network-only",
         onError: () => {
             console.log("Token invalide ou expiré, user non trouvé.");

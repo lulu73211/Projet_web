@@ -6,7 +6,7 @@ async function main() {
     data: [
       {
         firstName: 'Alice',
-        lastName: 'Gagoi',
+        lastName: 'Gogole',
         email: 'alice@email.com',
         password:
           '$2b$10$C4SeSzM1i9lWDRbOsB1Q/uEQWSMczylyn2M3.KXXl5OjnsMEC63Sy',
