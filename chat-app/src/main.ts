@@ -8,11 +8,12 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: 'http://localhost:5173', // autorise ton front vite
-    credentials: true,               // si tu veux autoriser cookies/headers auth
-  });
   const configService = app.get(ConfigService);
+
+  app.enableCors({
+    origin: configService.getOrThrow<string>('FRONTEND_URL'), // autorise ton front vite
+    credentials: true, // si tu veux autoriser cookies/headers auth
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -46,6 +47,7 @@ async function bootstrap() {
   logger.log('DATABASE_URL:', process.env.DATABASE_URL);
   logger.log('REDIS_URL:', process.env.REDIS_HOST, process.env.REDIS_PORT);
   logger.log('RABBITMQ_URL:', process.env.RABBITMQ_URL);
+  logger.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
   logger.log('Starting RabbitMQ microservice...');
   await microservice.listen();
