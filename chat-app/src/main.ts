@@ -43,6 +43,10 @@ async function bootstrap() {
       microserviceOptions,
     );
 
+  logger.log('DATABASE_URL:', process.env.DATABASE_URL);
+  logger.log('REDIS_URL:', process.env.REDIS_HOST, process.env.REDIS_PORT);
+  logger.log('RABBITMQ_URL:', process.env.RABBITMQ_URL);
+
   logger.log('Starting RabbitMQ microservice...');
   await microservice.listen();
   logger.log('RabbitMQ microservice is running');

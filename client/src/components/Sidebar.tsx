@@ -1,4 +1,4 @@
-import { Home, MessageSquare, LogOut } from "lucide-react"
+import { MessageSquare, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Link, useNavigate } from "react-router";

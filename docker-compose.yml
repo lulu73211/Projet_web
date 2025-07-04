@@ -24,5 +24,29 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
+  backend:
+    build:
+      context: ./chat-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./chat-app:/app
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "9400:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+
 volumes:
   postgres-data:
