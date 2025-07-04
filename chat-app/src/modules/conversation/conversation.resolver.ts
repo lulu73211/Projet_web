@@ -23,7 +23,7 @@ export class ConversationResolver {
   @UseGuards(GqlAuthGuard)
   @Query(() => [ConversationModel])
   myConversations(@CurrentUser() user: JwtPayload) {
-    return this.service.getByUserId(user.sub);
+    return this.service.getByUserId(user.id);
   }
 
   @Mutation(() => ConversationModel)

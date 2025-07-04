@@ -1,4 +1,4 @@
-import type { Conversation, User } from "../types";
+import type { Conversation } from "../types";
 
 interface ConversationDetailProps {
   conversation: Conversation;
